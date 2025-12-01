@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -107,26 +107,26 @@
   </header>
 
   <main id="gallery">
-    <!-- Imagens adicionadas aqui -->
+    <!-- Images will appear here -->
   </main>
 
-  <!-- Popup de upload -->
+  <!-- Upload Popup -->
   <div id="uploadPopup">
     <div id="popupContent">
-      <h2>Upload de Imagem</h2>
-      <p>Insira o código de 5 dígitos:</p>
+      <h2>Upload Image</h2>
+      <p>Enter the 5-digit code:</p>
       <input type="text" id="codeInput" placeholder="Ex: 12345" maxlength="5">
       <br>
       <input type="file" id="imageInput" accept="image/*">
       <br><br>
-      <button id="submitBtn">Enviar</button>
+      <button id="submitBtn">Submit</button>
       <br><br>
-      <button id="closePopup">Cancelar</button>
+      <button id="closePopup">Cancel</button>
     </div>
   </div>
 
   <script>
-    const UPLOAD_CODE = "12345"; // código de 5 dígitos que você escolhe
+    const UPLOAD_CODE = "12345"; // Change this code as needed
     const uploadBtn = document.getElementById("uploadBtn");
     const uploadPopup = document.getElementById("uploadPopup");
     const closePopup = document.getElementById("closePopup");
@@ -145,11 +145,11 @@
       const code = document.getElementById("codeInput").value;
       const fileInput = document.getElementById("imageInput");
       if(code !== UPLOAD_CODE) {
-        alert("Código incorreto!");
+        alert("Incorrect code!");
         return;
       }
       if(fileInput.files.length === 0){
-        alert("Selecione uma imagem!");
+        alert("Please select an image!");
         return;
       }
 
@@ -159,11 +159,11 @@
         const imgDiv = document.createElement("div");
         imgDiv.className = "image-card";
         imgDiv.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
-        gallery.prepend(imgDiv); // adiciona no topo
+        gallery.prepend(imgDiv); // add to top
       }
       reader.readAsDataURL(file);
 
-      // Reset e fechar popup
+      // Reset and close popup
       fileInput.value = "";
       document.getElementById("codeInput").value = "";
       uploadPopup.style.display = "none";
