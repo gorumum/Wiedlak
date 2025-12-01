@@ -1,40 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wiedlak Gallery</title>
-<style>
-  body { margin:0; font-family: Arial, sans-serif; background:#f5f5f5; }
-  header {
-    position: fixed; top:0; width:100%; background:#fff; padding:10px 20px;
-    box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between;
-    align-items:center; z-index:1000;
-  }
-  header h1 { margin:0; font-size:1.5rem; color:#333; }
-  #uploadBtn { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
-  #uploadBtn:hover { background:#005bb5; }
-  main { padding:80px 20px 20px 20px; column-count:4; column-gap:15px; }
-  .image-card { width:100%; margin-bottom:15px; break-inside:avoid; background:#fff;
-    border-radius:5px; overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,0.1);
-    opacity:0; transform: translateY(20px); transition: all 0.5s ease;
-  }
-  .image-card.visible { opacity:1; transform: translateY(0); }
-  .image-card img { width:100%; display:block; cursor:pointer; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wiedlak Gallery (with Imgbb)</title>
+  <style>
+    body { margin:0; font-family:Arial, sans-serif; background:#f5f5f5; }
+    header { position:fixed; top:0; width:100%; background:#fff; padding:10px 20px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; z-index:1000; }
+    header h1 { margin:0; font-size:1.5rem; color:#333; }
+    #uploadBtn { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
+    #uploadBtn:hover { background:#005bb5; }
+    main { padding:80px 20px 20px 20px; column-count:4; column-gap:15px; }
+    .image-card { width:100%; margin-bottom:15px; break-inside:avoid; background:#fff; border-radius:5px; overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,0.1); }
+    .image-card img { width:100%; display:block; cursor:pointer; }
+    @media(max-width:1200px){ main{column-count:3;} }
+    @media(max-width:900px){ main{column-count:2;} }
+    @media(max-width:600px){ main{column-count:1;} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wiedlak Gallery</h1>
+    <button id="uploadBtn">Upload</button>
+  </header>
 
-  /* Upload popup */
-  #uploadPopup {
-    display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6);
-    justify-content:center; align-items:center; z-index:2000;
-  }
-  #popupContent { background:#fff; padding:20px; border-radius:8px; text-align:center; width:300px; }
-  #popupContent input[type="file"], #popupContent input[type="text"] {
-    margin:10px 0; padding:5px; width:80%;
-  }
-  #popupContent button { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
-  #popupContent button:hover { background:#005bb5; }
+  <main id="gallery">
+    <!-- Imagens carregadas aparecerão aqui -->
+  </main>
 
-  /* Modal for image detail */
+  <!-- input de upload escondido -->
+  <input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+  <script>
+    // Substitua por sua API Key do Imgbb
+    const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY";
+
+    const uploadBtn = document.getElementById("uploadBtn");
+    const fileInput = document.getElementById("fileInput");
+    const gallery = document.getElementById("gallery");
+
+    uploadBtn.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      // Ler como base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result.split(",")[1]; // remove data:image/...;base64,
+
+        // Fazer upload para Imgbb
+        const form = new FormData();
+        form.append("key", IMGBB_API_KEY);
+        form.append("image", base64);
+
+        const resp = await fetch("https://api.imgbb.com/1/upload", {
+          method: "POST",
+          body: form
+        });
+        const data = await resp.json();
+        if (data.success) {
+          const url = data.data.display_url; // URL da imagem
+          console.log("Uploaded:", url);
+
+          // Criar card de imagem
+          const div = document.createElement("div");
+          div.className = "image-card";
+          div.innerHTML = `<img src="${url}" alt="Uploaded Image">`;
+          gallery.prepend(div);
+        } else {
+          alert("Upload failed");
+        }
+      };
+      reader.readAsDataURL(file);
+      fileInput.value = "";
+    });
+  </script>
+</body>
+</html>  /* Modal for image detail */
   #imageModal {
     display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8);
     justify-content:center; align-items:center; z-index:3000; overflow:hidden;
