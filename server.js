@@ -1,7 +1,11 @@
 npm init -y
 npm install express multer
 node server.js
-// server.js
+// No server.js
+const PORT = 4000; // Mude de 3000 para 4000
+// ...
+npm install
+
 
 const express = require('express');
 const multer = require('multer');
