@@ -25,8 +25,7 @@
             color: var(--text);
             padding-bottom: 50px;
         }
-
-        /* --- Header --- */
+        /* [Resto do seu CSS... Não alterado para manter a estética] */
         header {
             position: sticky;
             top: 0;
@@ -228,6 +227,7 @@
             user-select: none;
         }
 
+
     </style>
 </head>
 <body>
@@ -273,21 +273,109 @@
         /* --- Configuração --- */
         const SECRET_PIN = "12345";
         const galleryGrid = document.getElementById('gallery-grid');
-        // Usamos URLs de exemplo (Unsplash) para que a galeria não comece vazia.
-        const initialImages = [
-            "https://images.unsplash.com/photo-1549480795-5f56b26d1d4d?w=600&q=80",
-            "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80",
-            "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=600&q=80",
-            "https://images.unsplash.com/photo-1499750310159-529801977349?w=600&q=80",
-            "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=600&q=80"
-        ];
+        // A base da URL aponta para o seu servidor Node.js
+        const API_BASE_URL = 'http://localhost:4000'; 
+        
+        /* ---------------------------------------------------------------------------------- */
+        /* --- 1. FUNÇÃO PRINCIPAL DE CARREGAMENTO (BUSCA DO SERVIDOR) --- */
+        /* ---------------------------------------------------------------------------------- */
 
-        // Carregar exemplos ao iniciar (apenas enquanto não temos um Banco de Dados)
-        window.onload = () => {
-            initialImages.forEach(url => createCard(url));
-        };
+        window.onload = loadImagesFromApi;
 
-        /* --- Funções do Modal --- */
+        async function loadImagesFromApi() {
+            try {
+                // Limpa a galeria para recarregar
+                galleryGrid.innerHTML = '';
+                
+                // 1. Busca a lista de URLs de imagem do servidor (GET /images)
+                const response = await fetch(API_BASE_URL + '/images');
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar lista de imagens do servidor.');
+                }
+                
+                const images = await response.json(); // Retorna array de objetos: [{ filename, url }, ...]
+
+                // 2. Cria os cards para cada imagem
+                if (images && images.length > 0) {
+                    images.forEach(imgData => {
+                        // A URL completa é necessária (http://localhost:4000/uploads/nome.jpg)
+                        const fullUrl = API_BASE_URL + imgData.url; 
+                        createCard(fullUrl, false); 
+                    });
+                } else {
+                    galleryGrid.innerHTML = '<p style="text-align:center;width:100%;grid-column: 1 / -1; color: var(--gray-medium);">Nenhuma imagem encontrada no servidor.</p>';
+                }
+
+            } catch (error) {
+                console.error("Erro ao carregar imagens:", error);
+                galleryGrid.innerHTML = `<p style="text-align:center;width:100%;grid-column: 1 / -1; color: var(--primary-dark);">
+                    🚨 ERRO DE CONEXÃO. Verifique se o servidor Node.js (PORTA 4000) está ativo.
+                </p>`;
+            }
+        }
+
+
+        /* ---------------------------------------------------------------------------------- */
+        /* --- 2. FUNÇÃO DE UPLOAD PARA O SERVIDOR NODE.JS (POST /upload) --- */
+        /* ---------------------------------------------------------------------------------- */
+
+        async function processUpload() {
+            const pinInput = document.getElementById('pin-code');
+            const fileInput = document.getElementById('file-input');
+
+            // 1. Validações locais
+            if (pinInput.value !== SECRET_PIN) {
+                alert("⛔ PIN Incorreto!");
+                return;
+            }
+            if (fileInput.files.length === 0) {
+                alert("⚠️ Selecione uma imagem.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            
+            // 2. Cria o objeto FormData
+            const formData = new FormData();
+            // 'image' deve corresponder ao nome do campo no Multer em server.js (upload.single('image'))
+            formData.append('image', file); 
+            // O PIN é enviado no FormData para verificação no server.js (embora a rota POST /upload não use o PIN no server.js fornecido, é boa prática enviar)
+            formData.append('pinCode', pinInput.value); 
+
+            try {
+                // 3. Envia os dados para a rota do servidor Node.js
+                const response = await fetch(API_BASE_URL + '/upload', {
+                    method: 'POST',
+                    body: formData 
+                });
+                
+                const data = await response.json();
+
+                if (response.ok && data.url) {
+                    // O servidor retorna a URL pública da imagem salva
+                    const publicUrl = API_BASE_URL + data.url; 
+                    
+                    createCard(publicUrl, true);
+                    toggleModal(false);
+                    alert("✨ Postado com sucesso! Salvo no servidor.");
+
+                    // Recarrega a lista completa para garantir a sincronia
+                    await loadImagesFromApi(); 
+                    
+                } else {
+                    alert(`❌ Falha no Upload: ${data.error || 'Erro desconhecido no servidor'}`);
+                }
+            } catch (error) {
+                console.error('Erro de rede/servidor:', error);
+                alert("Houve um erro de conexão. Verifique o console para mais detalhes.");
+            }
+        }
+        
+        /* ---------------------------------------------------------------------------------- */
+        /* --- Funções de Renderização e Lightbox (Mantidas) --- */
+        /* ---------------------------------------------------------------------------------- */
+
         function toggleModal(show) {
             const modal = document.getElementById('upload-modal');
             modal.style.display = show ? 'flex' : 'none';
@@ -305,65 +393,11 @@
             }
         }
 
-        /* ---------------------------------------------------------------------------------- */
-        /* --- NOVO: Lógica de Upload para o Servidor Node.js (Função Atualizada) --- */
-        /* ---------------------------------------------------------------------------------- */
-        function processUpload() {
-            const pinInput = document.getElementById('pin-code');
-            const fileInput = document.getElementById('file-input');
-
-            // 1. Validações locais (PIN e arquivo)
-            if (pinInput.value !== SECRET_PIN) {
-                alert("⛔ PIN Incorreto!");
-                return;
-            }
-            if (fileInput.files.length === 0) {
-                alert("⚠️ Selecione uma imagem.");
-                return;
-            }
-
-            const file = fileInput.files[0];
-            
-            // 2. Cria o objeto FormData para enviar o arquivo e o PIN ao servidor
-            const formData = new FormData();
-            formData.append('imageFile', file); // O nome 'imageFile' deve ser o mesmo usado no Multer do server.js!
-            formData.append('pinCode', pinInput.value); 
-
-            // 3. Envia os dados para a rota do servidor Node.js
-            fetch('/upload', {
-                method: 'POST',
-                body: formData 
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // O servidor Node.js retorna a URL pública da imagem salva (ex: /uploads/nome-unico.jpg)
-                    const publicUrl = data.url; 
-                    
-                    // Cria o card usando a URL do servidor
-                    createCard(publicUrl, true);
-                    toggleModal(false);
-                    alert("✨ Postado com sucesso! Salvo no servidor.");
-                    
-                } else {
-                    alert(`❌ Falha no Upload: ${data.message}`);
-                }
-            })
-            .catch(error => {
-                console.error('Erro de rede:', error);
-                alert("Houve um erro de conexão. Certifique-se de que o 'node server.js' está rodando.");
-            });
-        }
-        
-        /* ---------------------------------------------------------------------------------- */
-        /* --- Funções de Renderização e Lightbox (Mantidas) --- */
-        /* ---------------------------------------------------------------------------------- */
 
         function createCard(url, prepend = false) {
             const card = document.createElement('div');
             card.className = 'card';
             
-            // Note que o 'href' e 'download' usam a URL do servidor
             card.innerHTML = `
                 <img src="${url}" alt="Gallery Image" onclick="openLightbox('${url}')">
                 <div class="card-overlay">
