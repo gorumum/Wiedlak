@@ -1,40 +1,456 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wiedlak Gallery (with Imgbb)</title>
-  <style>
-    body { margin:0; font-family:Arial, sans-serif; background:#f5f5f5; }
-    header { position:fixed; top:0; width:100%; background:#fff; padding:10px 20px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; z-index:1000; }
-    header h1 { margin:0; font-size:1.5rem; color:#333; }
-    #uploadBtn { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
-    #uploadBtn:hover { background:#005bb5; }
-    main { padding:80px 20px 20px 20px; column-count:4; column-gap:15px; }
-    .image-card { width:100%; margin-bottom:15px; break-inside:avoid; background:#fff; border-radius:5px; overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,0.1); }
-    .image-card img { width:100%; display:block; cursor:pointer; }
-    @media(max-width:1200px){ main{column-count:3;} }
-    @media(max-width:900px){ main{column-count:2;} }
-    @media(max-width:600px){ main{column-count:1;} }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Wiedlak Gallery</title>
+<style>
+  :root{
+    --accent:#0073e6;
+    --accent-dark:#005bb5;
+    --bg:#f5f7fa;
+    --card:#ffffff;
+    --muted:#666;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    background:var(--bg);
+    color:#111;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* Header */
+  header{
+    position:fixed; top:0; left:0; right:0;
+    height:64px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px; background:rgba(255,255,255,0.9); backdrop-filter: blur(4px);
+    border-bottom:1px solid rgba(0,0,0,0.04); z-index:1100;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:42px;height:42px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#00a3ff);
+    display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:700;
+    box-shadow:0 6px 18px rgba(3,102,214,0.12);
+  }
+  h1{font-size:16px;margin:0;}
+  .actions{display:flex;align-items:center;gap:10px}
+
+  /* Upload button */
+  button.btn{
+    background:var(--accent); color:#fff; border:0; padding:8px 14px; border-radius:8px; cursor:pointer;
+    font-weight:600; box-shadow: 0 6px 14px rgba(3,102,214,0.12);
+  }
+  button.btn:hover{background:var(--accent-dark)}
+
+  /* Gallery grid */
+  main{padding:88px 18px 40px; max-width:1200px; margin:0 auto}
+  #gallery{ column-count:4; column-gap:16px; }
+  @media(max-width:1200px){#gallery{column-count:3}}
+  @media(max-width:900px){#gallery{column-count:2}}
+  @media(max-width:600px){#gallery{column-count:1}}
+
+  .card{
+    display:inline-block; width:100%; margin:0 0 16px; break-inside:avoid; background:var(--card);
+    border-radius:10px; overflow:hidden; box-shadow:0 6px 18px rgba(10,20,30,0.06);
+    transform:translateY(18px); opacity:0; transition:transform .45s cubic-bezier(.2,.9,.3,1),opacity .4s;
+  }
+  .card.visible{transform:none; opacity:1}
+  .card img{width:100%; display:block; cursor:pointer; user-select:none}
+  .card .meta{padding:10px 12px; display:flex; align-items:center; justify-content:space-between}
+  .meta .title{font-size:13px; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .meta .icons{display:flex;gap:8px; align-items:center}
+
+  .icon-btn{
+    background:transparent; border:0; cursor:pointer; padding:6px; border-radius:6px;
+  }
+  .icon-btn:hover{background:rgba(0,0,0,0.04)}
+
+  /* Upload modal */
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; align-items:center; justify-content:center; z-index:1200}
+  .panel{
+    width:360px; max-width:96%; background:var(--card); border-radius:12px; padding:18px; box-shadow:0 20px 60px rgba(5,10,20,0.3);
+  }
+  .panel h2{margin:0 0 8px; font-size:18px}
+  .field{margin:8px 0; display:flex;flex-direction:column; gap:6px}
+  input[type="text"], input[type="file"], textarea{
+    width:100%; padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.08);
+    font-size:14px; background: #fff;
+  }
+  .muted{font-size:13px;color:var(--muted)}
+
+  /* Modal detail (slide from right) */
+  .detail-overlay{position:fixed; inset:0; display:none; z-index:1300}
+  .detail-sheet{
+    position:absolute; right:0; top:0; height:100%; width:92%; max-width:980px; background:#fff;
+    display:flex; gap:0; transform:translateX(100%); transition:transform .45s cubic-bezier(.2,.9,.3,1);
+    box-shadow: -24px 0 60px rgba(8,20,40,0.35);
+  }
+  .detail-sheet.show{transform:translateX(0)}
+  .detail-left{flex:1; background:#111; display:flex; align-items:center; justify-content:center}
+  .detail-left img{max-width:100%; max-height:100%; object-fit:contain}
+  .detail-right{width:380px; padding:20px; display:flex;flex-direction:column}
+  .detail-right h3{margin:0 0 10px}
+  .detail-right textarea{flex:1; resize:none; border:1px solid rgba(0,0,0,0.06); padding:10px; border-radius:8px}
+  .detail-actions{display:flex; gap:10px; margin-top:12px}
+  .small{font-size:13px}
+
+  /* small helpers */
+  .row{display:flex; gap:10px; align-items:center}
+  .progress{height:8px; width:100%; background:rgba(0,0,0,0.06); border-radius:6px; overflow:hidden}
+  .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#00a3ff)}
+  .center{display:flex;align-items:center;justify-content:center}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Wiedlak Gallery</h1>
-    <button id="uploadBtn">Upload</button>
-  </header>
 
-  <main id="gallery">
-    <!-- Imagens carregadas aparecerão aqui -->
-  </main>
+<header>
+  <div class="brand">
+    <div class="logo">W</div>
+    <div>
+      <h1>Wiedlak Gallery</h1>
+      <div class="muted small">A simple image board</div>
+    </div>
+  </div>
 
-  <!-- input de upload escondido -->
-  <input type="file" id="fileInput" accept="image/*" style="display:none;">
+  <div class="actions">
+    <button id="uploadBtn" class="btn">Upload</button>
+  </div>
+</header>
 
-  <script>
-    // Substitua por sua API Key do Imgbb
-    const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY";
+<main>
+  <div id="gallery" aria-live="polite"></div>
+</main>
 
+<!-- Upload overlay -->
+<div id="uploadOverlay" class="overlay" aria-hidden="true">
+  <div class="panel" role="dialog" aria-modal="true">
+    <h2>Upload image</h2>
+    <div class="field">
+      <label class="muted small">Enter 5-digit code</label>
+      <input id="codeInput" type="text" placeholder="e.g. 12345" maxlength="5" inputmode="numeric" />
+    </div>
+    <div class="field">
+      <label class="muted small">Image file</label>
+      <input id="fileInput" type="file" accept="image/*"/>
+    </div>
+    <div class="field">
+      <label class="muted small">Description (optional)</label>
+      <textarea id="descInput" rows="3" placeholder="Write a short description..."></textarea>
+    </div>
+
+    <div class="field">
+      <div class="row">
+        <div style="flex:1">
+          <button id="submitUpload" class="btn">Submit</button>
+        </div>
+        <div style="width:110px; text-align:right">
+          <button id="cancelUpload" class="btn" style="background:#ddd;color:#111">Cancel</button>
+        </div>
+      </div>
+      <div style="height:10px;margin-top:8px" class="progress" id="uploadProgress" aria-hidden="true"><i></i></div>
+      <div id="uploadMsg" class="muted small" style="margin-top:8px"></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:#666">
+      Uses <strong>ImgBB</strong> to host images. Replace API key in code. Images and metadata are also saved in your browser (localStorage).
+    </div>
+  </div>
+</div>
+
+<!-- Detail slide sheet -->
+<div id="detailOverlay" class="detail-overlay" aria-hidden="true">
+  <div id="detailSheet" class="detail-sheet" role="dialog" aria-modal="true">
+    <div class="detail-left center">
+      <img id="detailImg" src="" alt="Image preview"/>
+    </div>
+    <div class="detail-right">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="detailTitle">Title</h3>
+        <div>
+          <a id="downloadLink" href="#" download><button class="btn">Download</button></a>
+        </div>
+      </div>
+      <div class="muted small" style="margin-bottom:8px">Description</div>
+      <textarea id="detailDesc" placeholder="Add a description..."></textarea>
+      <div class="detail-actions">
+        <button id="saveDesc" class="btn">Save description</button>
+        <button id="closeDetail" class="btn" style="background:#eee;color:#111">Close</button>
+      </div>
+      <div style="margin-top:10px" class="small muted">Saved locally in your browser.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================
+   CONFIG
+   ==========================
+   - Replace IMGBB_API_KEY with your key from https://imgbb.com/
+   - Allowed upload codes can be edited below
+*/
+const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY"; // <<---- put your key here
+const ALLOWED_CODES = ["12345","22222"];    // allowed 5-digit upload codes
+const STORAGE_KEY = "wiedlak_images_v1";
+
+/* ==========================
+   UTIL & DOM
+   ========================== */
+const uploadBtn = document.getElementById('uploadBtn');
+const uploadOverlay = document.getElementById('uploadOverlay');
+const cancelUpload = document.getElementById('cancelUpload');
+const submitUpload = document.getElementById('submitUpload');
+const codeInput = document.getElementById('codeInput');
+const fileInput = document.getElementById('fileInput');
+const descInput = document.getElementById('descInput');
+const uploadProgress = document.getElementById('uploadProgress');
+const uploadMsg = document.getElementById('uploadMsg');
+
+const gallery = document.getElementById('gallery');
+
+const detailOverlay = document.getElementById('detailOverlay');
+const detailSheet = document.getElementById('detailSheet');
+const detailImg = document.getElementById('detailImg');
+const detailTitle = document.getElementById('detailTitle');
+const detailDesc = document.getElementById('detailDesc');
+const saveDesc = document.getElementById('saveDesc');
+const closeDetail = document.getElementById('closeDetail');
+const downloadLink = document.getElementById('downloadLink');
+
+/* ==========================
+   State: load from localStorage
+   ========================== */
+let images = [];
+try{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw) images = JSON.parse(raw);
+} catch(e){ images = []; }
+
+function persist(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
+}
+
+/* ==========================
+   Render
+   ========================== */
+function renderGallery(){
+  gallery.innerHTML = '';
+  images.forEach((it, idx)=>{
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${it.url}" alt="${escapeHtml(it.title||'image')}" data-idx="${idx}" loading="lazy">
+      <div class="meta">
+        <div class="title">${escapeHtml(it.title||'Untitled')}</div>
+        <div class="icons">
+          <button class="icon-btn" data-action="download" data-idx="${idx}" title="Download">⬇</button>
+        </div>
+      </div>
+    `;
+    gallery.appendChild(card);
+    // reveal animation
+    setTimeout(()=>card.classList.add('visible'), 50 + idx*40);
+  });
+
+  // attach events
+  gallery.querySelectorAll('img[data-idx]').forEach(img=>{
+    img.addEventListener('click', e=>{
+      const idx = Number(img.dataset.idx);
+      openDetail(idx);
+    });
+  });
+  gallery.querySelectorAll('button[data-action="download"]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const idx = Number(btn.dataset.idx);
+      const link = document.createElement('a');
+      link.href = images[idx].url;
+      link.download = images[idx].title || 'image';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    });
+  });
+}
+
+/* ==========================
+   Helpers
+   ========================== */
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+}
+
+function showOverlay(el){
+  el.style.display = 'flex';
+  el.setAttribute('aria-hidden','false');
+}
+function hideOverlay(el){
+  el.style.display = 'none';
+  el.setAttribute('aria-hidden','true');
+}
+
+/* ==========================
+   Upload flow (ImgBB)
+   ========================== */
+uploadBtn.addEventListener('click', ()=> {
+  codeInput.value='';
+  fileInput.value='';
+  descInput.value='';
+  uploadProgress.querySelector('i').style.width = '0%';
+  uploadMsg.textContent = '';
+  showOverlay(uploadOverlay);
+});
+
+cancelUpload.addEventListener('click', ()=> hideOverlay(uploadOverlay));
+
+// Utility: convert file to base64 string
+function fileToBase64(file){
+  return new Promise((res, rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result.split(',')[1]); // only base64 portion
+    r.onerror = ()=>rej(new Error("Failed reading file"));
+    r.readAsDataURL(file);
+  });
+}
+
+async function doUpload(file, title, desc, onProgress){
+  if(!IMGBB_API_KEY || IMGBB_API_KEY === 'YOUR_IMGBB_API_KEY'){
+    throw new Error('ImgBB API key not configured. Put your key in the code (IMGBB_API_KEY).');
+  }
+  // read base64
+  const base64 = await fileToBase64(file);
+
+  // build formdata
+  const form = new FormData();
+  form.append('key', IMGBB_API_KEY);
+  form.append('image', base64);
+  form.append('name', title);
+
+  // fetch with progress using XHR to track progress
+  return new Promise((resolve, reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.imgbb.com/1/upload');
+    xhr.upload.onprogress = e=>{
+      if(e.lengthComputable && onProgress) {
+        const p = Math.round((e.loaded / e.total) * 100);
+        onProgress(p);
+      }
+    };
+    xhr.onload = ()=>{
+      try{
+        const resp = JSON.parse(xhr.responseText);
+        if(resp && resp.success && resp.data && resp.data.display_url){
+          resolve(resp.data);
+        } else {
+          reject(new Error('Upload failed: ' + (resp && resp.error && resp.error.message || 'unknown')));
+        }
+      }catch(err){ reject(err) }
+    };
+    xhr.onerror = ()=> reject(new Error('Network error during upload'));
+    xhr.send(form);
+  });
+}
+
+submitUpload.addEventListener('click', async ()=>{
+  const code = (codeInput.value || '').trim();
+  const file = fileInput.files[0];
+  const desc = descInput.value || '';
+
+  if(!ALLOWED_CODES.includes(code)){
+    uploadMsg.textContent = 'Incorrect code.';
+    return;
+  }
+  if(!file){
+    uploadMsg.textContent = 'Please select an image file.';
+    return;
+  }
+  // basic size guard (ImgBB supports up to 32MB, but be cautious)
+  if(file.size > 32 * 1024 * 1024){
+    uploadMsg.textContent = 'File too large (>32MB).';
+    return;
+  }
+
+  uploadMsg.textContent = 'Uploading...';
+  uploadProgress.style.display = 'block';
+
+  try{
+    const data = await doUpload(file, file.name.replace(/\s+/g,'_'), desc, p=>{
+      uploadProgress.querySelector('i').style.width = p + '%';
+    });
+
+    // push to local state + persist
+    const newItem = {
+      id: Date.now() + '_' + Math.floor(Math.random()*10000),
+      url: data.display_url,
+      title: file.name,
+      desc: desc || '',
+      created: (new Date()).toISOString()
+    };
+    images.unshift(newItem);
+    persist();
+    renderGallery();
+
+    uploadMsg.textContent = 'Uploaded successfully!';
+    setTimeout(()=> {
+      hideOverlay(uploadOverlay);
+      uploadProgress.querySelector('i').style.width = '0%';
+      uploadMsg.textContent = '';
+    },900);
+
+  }catch(err){
+    uploadMsg.textContent = 'Upload error: ' + (err.message || err);
+    uploadProgress.querySelector('i').style.width = '0%';
+  }
+});
+
+/* ==========================
+   Detail sheet behavior
+   ========================== */
+let currentIdx = null;
+function openDetail(idx){
+  currentIdx = idx;
+  const it = images[idx];
+  if(!it) return;
+  detailImg.src = it.url;
+  detailTitle.textContent = it.title || 'Image';
+  detailDesc.value = it.desc || '';
+  downloadLink.href = it.url;
+  downloadLink.download = it.title || 'image';
+  showOverlay(detailOverlay);
+  setTimeout(()=> detailSheet.classList.add('show'), 20);
+}
+
+closeDetail.addEventListener('click', ()=> {
+  detailSheet.classList.remove('show');
+  setTimeout(()=> hideOverlay(detailOverlay), 420);
+});
+
+saveDesc.addEventListener('click', ()=>{
+  if(currentIdx === null) return;
+  images[currentIdx].desc = detailDesc.value;
+  persist();
+  renderGallery();
+  // keep open and show a small confirmation
+  saveDesc.textContent = 'Saved ✓';
+  setTimeout(()=> (saveDesc.textContent = 'Save description'), 1200);
+});
+
+/* ==========================
+   Initial render
+   ========================== */
+renderGallery();
+
+/* ==========================
+   Small UX: close overlays with ESC
+   ========================== */
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    if(uploadOverlay.style.display === 'flex') hideOverlay(uploadOverlay);
+    if(detailOverlay.style.display === 'flex'){ detailSheet.classList.remove('show'); setTimeout(()=> hideOverlay(detailOverlay),420) }
+  }
+});
+</script>
+</body>
+</html>
     const uploadBtn = document.getElementById("uploadBtn");
     const fileInput = document.getElementById("fileInput");
     const gallery = document.getElementById("gallery");
