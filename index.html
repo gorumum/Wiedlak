@@ -47,6 +47,147 @@
   #modalContent img { width:60%; object-fit:cover; }
   #modalInfo { padding:20px; width:40%; display:flex; flex-direction:column; justify-content:center; }
   #modalInfo h2 { margin:0 0 10px 0; }
+  #modalInfo textarea { width:100%; height:100px; margin-bottom:10px; resize:none; padding:5px; }
+  #modalInfo button { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
+  #modalInfo button:hover { background:#005bb5; }
+  #closeModal { position:absolute; top:10px; right:10px; background:#ff4b5c; border:none; padding:6px 10px; color:white; border-radius:5px; cursor:pointer; }
+  #closeModal:hover { background:#d43f50; }
+
+  @media(max-width:1200px){ main{ column-count:3; } }
+  @media(max-width:900px){ main{ column-count:2; } }
+  @media(max-width:600px){ main{ column-count:1; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Wiedlak Gallery</h1>
+  <button id="uploadBtn">Upload</button>
+</header>
+
+<main id="gallery">
+  <!-- Uploaded images will appear here -->
+</main>
+
+<!-- Upload Popup -->
+<div id="uploadPopup">
+  <div id="popupContent">
+    <h2>Upload Image</h2>
+    <p>Enter the 5-digit code:</p>
+    <input type="text" id="codeInput" placeholder="Ex: 12345" maxlength="5">
+    <input type="file" id="imageInput" accept="image/*">
+    <br><br>
+    <button id="submitBtn">Submit</button>
+    <button id="closePopup">Cancel</button>
+  </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal">
+  <div id="modalContent">
+    <img id="modalImg" src="">
+    <div id="modalInfo">
+      <h2 id="modalTitle"></h2>
+      <textarea id="modalDesc" placeholder="Enter description here..."></textarea>
+      <a id="downloadBtn" href="#" download><button>Download</button></a>
+    </div>
+    <button id="closeModal">X</button>
+  </div>
+</div>
+
+<script>
+const UPLOAD_CODE = "12345";
+const uploadBtn = document.getElementById("uploadBtn");
+const uploadPopup = document.getElementById("uploadPopup");
+const closePopup = document.getElementById("closePopup");
+const submitBtn = document.getElementById("submitBtn");
+const gallery = document.getElementById("gallery");
+
+// Modal
+const imageModal = document.getElementById("imageModal");
+const modalContent = document.getElementById("modalContent");
+const modalImg = document.getElementById("modalImg");
+const modalTitle = document.getElementById("modalTitle");
+const modalDesc = document.getElementById("modalDesc");
+const downloadBtn = document.getElementById("downloadBtn");
+const closeModal = document.getElementById("closeModal");
+
+let images = []; // Store images in memory
+
+uploadBtn.addEventListener("click", ()=> uploadPopup.style.display="flex");
+closePopup.addEventListener("click", ()=> uploadPopup.style.display="none");
+
+submitBtn.addEventListener("click", ()=>{
+  const code = document.getElementById("codeInput").value;
+  const fileInput = document.getElementById("imageInput");
+  if(code !== UPLOAD_CODE){ alert("Incorrect code!"); return; }
+  if(fileInput.files.length===0){ alert("Select an image!"); return; }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const imgData = {
+      src: e.target.result,
+      title: file.name,
+      desc: ""
+    };
+    images.unshift(imgData);
+    renderGallery();
+  }
+  reader.readAsDataURL(file);
+
+  fileInput.value=""; document.getElementById("codeInput").value="";
+  uploadPopup.style.display="none";
+});
+
+function renderGallery(){
+  gallery.innerHTML="";
+  images.forEach((imgData,index)=>{
+    const div = document.createElement("div");
+    div.className="image-card";
+    div.innerHTML = `<img src="${imgData.src}" alt="${imgData.title}" data-index="${index}">`;
+    gallery.appendChild(div);
+    setTimeout(()=> div.classList.add("visible"),100);
+  });
+
+  // Click image to open modal
+  document.querySelectorAll(".image-card img").forEach(img=>{
+    img.addEventListener("click", ()=>{
+      const idx = img.dataset.index;
+      modalImg.src = images[idx].src;
+      modalTitle.textContent = images[idx].title;
+      modalDesc.value = images[idx].desc;
+      downloadBtn.href = images[idx].src;
+      imageModal.style.display="flex";
+      setTimeout(()=> modalContent.classList.add("show"),10);
+
+      // Save description on change
+      modalDesc.oninput = function(){
+        images[idx].desc = modalDesc.value;
+      }
+    });
+  });
+}
+
+closeModal.addEventListener("click", ()=>{
+  modalContent.classList.remove("show");
+  setTimeout(()=> imageModal.style.display="none",500);
+});
+</script>
+</body>
+</html>  /* Modal for image detail */
+  #imageModal {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8);
+    justify-content:center; align-items:center; z-index:3000; overflow:hidden;
+  }
+  #modalContent {
+    position:relative; background:#fff; width:80%; max-width:700px; height:80%; border-radius:10px;
+    display:flex; overflow:hidden; transform: translateX(100%); transition: transform 0.5s ease;
+  }
+  #modalContent.show { transform: translateX(0); }
+  #modalContent img { width:60%; object-fit:cover; }
+  #modalInfo { padding:20px; width:40%; display:flex; flex-direction:column; justify-content:center; }
+  #modalInfo h2 { margin:0 0 10px 0; }
   #modalInfo p { flex:1; }
   #modalInfo button { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
   #modalInfo button:hover { background:#005bb5; }
