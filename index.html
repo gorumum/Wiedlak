@@ -1,392 +1,302 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wiedlak Gallery</title>
-<style>
-/* Reset básico */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiedlak Gallery</title>
+    <style>
+        :root {
+            --primary-color: #e60023; /* Vermelho estilo Pinterest */
+            --bg-color: #ffffff;
+            --text-color: #111111;
+            --gray-hover: #f0f0f0;
+            --card-radius: 16px;
+        }
 
-/* Corpo da página */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Helvetica, "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", メイリオ, Meiryo, "ＭＳ Ｐゴシック", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
 
-/* Cabeçalho */
-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  background: #0073e6;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
+        /* --- Header & Upload Bar --- */
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-header h1 {
-  font-size: 1.5rem;
-}
+        .logo {
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--primary-color);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-#uploadBtn {
-  padding: 8px 16px;
-  background: #00b300;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  color: white;
-  transition: background 0.3s;
-}
+        .upload-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: var(--gray-hover);
+            padding: 8px 16px;
+            border-radius: 30px;
+        }
 
-#uploadBtn:hover {
-  background: #009900;
-}
+        input[type="file"] {
+            display: none;
+        }
 
-/* Main gallery */
-main {
-  padding: 80px 20px 20px 20px;
-  column-count: 4;
-  column-gap: 15px;
-}
+        .custom-file-upload {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
 
-/* Image card */
-.image-card {
-  width: 100%;
-  margin-bottom: 15px;
-  break-inside: avoid;
-  position: relative;
-  overflow: hidden;
-  border-radius: 5px;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-  cursor: pointer;
-  transition: transform 0.3s;
-}
+        .custom-file-upload:hover {
+            background: #ddd;
+        }
 
-.image-card:hover {
-  transform: scale(1.03);
-}
+        input[type="password"] {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            width: 80px;
+            text-align: center;
+        }
 
-/* Imagem */
-.image-card img {
-  width: 100%;
-  display: block;
-  transition: opacity 0.5s;
-}
+        .btn-post {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
 
-/* Overlay ao clicar */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 100%;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.85);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  transition: left 0.5s;
-  z-index: 2000;
-}
+        .btn-post:hover {
+            background-color: #ad081b;
+        }
 
-.overlay img {
-  max-width: 80%;
-  max-height: 60%;
-  margin-bottom: 20px;
-}
+        .btn-post:active {
+            transform: scale(0.95);
+        }
 
-.overlay button {
-  padding: 8px 16px;
-  margin-top: 10px;
-  background: #0073e6;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
+        /* --- Masonry Grid Layout --- */
+        .gallery-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-.overlay button:hover {
-  background: #005bb5;
-}
+        .gallery {
+            column-count: 5; /* Número de colunas no PC */
+            column-gap: 16px;
+        }
 
-/* Popup upload */
-#uploadPopup {
-  display: none;
-  position: fixed;
-  top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
+        @media (max-width: 1200px) { .gallery { column-count: 4; } }
+        @media (max-width: 900px) { .gallery { column-count: 3; } }
+        @media (max-width: 600px) { .gallery { column-count: 2; } }
 
-#popupContent {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
-  width: 300px;
-}
+        /* --- Card (Image) Styles --- */
+        .card {
+            break-inside: avoid; /* Evita que a imagem seja cortada entre colunas */
+            margin-bottom: 16px;
+            position: relative;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            cursor: zoom-in;
+        }
 
-#popupContent input[type="file"] {
-  margin-top: 10px;
-}
+        .card img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: var(--card-radius);
+            transition: filter 0.3s;
+        }
 
-#popupContent input[type="text"] {
-  padding: 5px;
-  width: 80%;
-  margin: 10px 0;
-}
+        /* Overlay escuro ao passar o mouse */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none; /* Deixa clicar no botão abaixo */
+        }
 
-#popupContent button {
-  padding: 8px 16px;
-  background: #0073e6;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
+        .card:hover::after {
+            opacity: 1;
+        }
 
-#popupContent button:hover {
-  background: #005bb5;
-}
+        /* Botão Download */
+        .download-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: white;
+            color: black;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 10;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
 
-/* Responsivo */
-@media (max-width: 1200px) { main { column-count: 3; } }
-@media (max-width: 900px) { main { column-count: 2; } }
-@media (max-width: 600px) { main { column-count: 1; } }
-</style>
+        .card:hover .download-btn {
+            opacity: 1;
+        }
+
+        .download-btn:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.1);
+        }
+
+    </style>
 </head>
 <body>
 
-<header>
-  <h1>Wiedlak Gallery</h1>
-  <button id="uploadBtn">Upload</button>
-</header>
+    <header>
+        <div class="logo">
+            <svg height="24" width="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.65 0-5.789 2.738-5.789 5.57 0 1.103.425 2.286.953 2.922.105.126.12.236.089.363-.098.406-.316 1.285-.358 1.466-.057.243-.194.294-.448.177-1.674-.779-2.718-3.23-2.718-5.228 0-4.252 3.091-8.156 8.914-8.156 4.679 0 8.314 3.336 8.314 7.796 0 4.654-2.933 8.406-7.005 8.406-1.367 0-2.652-.709-3.091-1.546l-.841 3.203c-.305 1.174-1.134 2.645-1.691 3.541C9.648 23.907 10.8 24 12 24c6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12z"/></svg>
+            Wiedlak Gallery
+        </div>
 
-<main id="gallery">
-  <!-- Exemplo de imagens -->
-  <div class="image-card" data-title="Mountain View">
-    <img src="https://picsum.photos/300/200?random=1" title="Mountain View">
-  </div>
-  <div class="image-card" data-title="Ocean">
-    <img src="https://picsum.photos/300/200?random=2" title="Ocean">
-  </div>
-  <div class="image-card" data-title="Forest">
-    <img src="https://picsum.photos/300/200?random=3" title="Forest">
-  </div>
-</main>
+        <div class="upload-container">
+            <label for="file-upload" class="custom-file-upload">
+                📷 Escolher Foto
+            </label>
+            <input id="file-upload" type="file" accept="image/*"/>
+            
+            <input type="password" id="pin-code" placeholder="PIN (5)" maxlength="5">
+            
+            <button class="btn-post" onclick="uploadImage()">Postar</button>
+        </div>
+    </header>
 
-<!-- Overlay ao clicar -->
-<div class="overlay" id="overlay">
-  <img id="overlayImg" src="">
-  <div id="overlayTitle"></div>
-  <a id="downloadLink" href="" download>
-    <button>Download</button>
-  </a>
-  <button id="closeOverlay">Close</button>
-</div>
+    <div class="gallery-container">
+        <div class="gallery" id="gallery">
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1515516089376-88db1e26e9c0?w=500&q=80" alt="Exemplo">
+                <a href="https://images.unsplash.com/photo-1515516089376-88db1e26e9c0?w=500&q=80" download="imagem1.jpg" class="download-btn">⬇</a>
+            </div>
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80" alt="Exemplo">
+                <a href="#" class="download-btn">⬇</a>
+            </div>
+            <div class="card">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500&q=80" alt="Exemplo">
+                <a href="#" class="download-btn">⬇</a>
+            </div>
+             <div class="card">
+                <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=500&q=80" alt="Exemplo">
+                <a href="#" class="download-btn">⬇</a>
+            </div>
+             <div class="card">
+                <img src="https://images.unsplash.com/photo-1552083855-e518606bf38b?w=500&q=80" alt="Exemplo">
+                <a href="#" class="download-btn">⬇</a>
+            </div>
+        </div>
+    </div>
 
-<!-- Popup de upload -->
-<div id="uploadPopup">
-  <div id="popupContent">
-    <h3>Upload Image</h3>
-    <input type="file" id="fileInput">
-    <input type="text" id="codeInput" placeholder="Enter 5-digit code">
-    <br>
-    <button id="submitUpload">Submit</button>
-    <button id="cancelUpload">Cancel</button>
-  </div>
-</div>
+    <script>
+        // Configuração do código secreto
+        const SECRET_CODE = "12345"; 
 
-<script>
-// Abrir popup de upload
-document.getElementById('uploadBtn').addEventListener('click', () => {
-  document.getElementById('uploadPopup').style.display = 'flex';
-});
+        function uploadImage() {
+            const fileInput = document.getElementById('file-upload');
+            const pinInput = document.getElementById('pin-code');
+            const gallery = document.getElementById('gallery');
 
-// Cancelar upload
-document.getElementById('cancelUpload').addEventListener('click', () => {
-  document.getElementById('uploadPopup').style.display = 'none';
-});
+            // 1. Validação do arquivo
+            if (fileInput.files.length === 0) {
+                alert("Por favor, selecione uma imagem primeiro!");
+                return;
+            }
 
-// Submeter upload (simulação)
-document.getElementById('submitUpload').addEventListener('click', () => {
-  const code = document.getElementById('codeInput').value;
-  if (code === '22222') {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const imgSrc = e.target.result;
-        const gallery = document.getElementById('gallery');
-        const div = document.createElement('div');
-        div.className = 'image-card';
-        div.setAttribute('data-title', fileInput.files[0].name);
-        div.innerHTML = `<img src="${imgSrc}" title="${fileInput.files[0].name}">`;
-        gallery.prepend(div);
-      }
-      reader.readAsDataURL(fileInput.files[0]);
-    }
-    document.getElementById('uploadPopup').style.display = 'none';
-  } else {
-    alert('Wrong code!');
-  }
-});
+            // 2. Validação do Código de 5 dígitos
+            const userCode = pinInput.value;
+            if (userCode !== SECRET_CODE) {
+                alert("Código incorreto! Digite o PIN de 5 dígitos (Dica: 12345)");
+                pinInput.value = "";
+                pinInput.focus();
+                return;
+            }
 
-// Overlay imagens
-document.addEventListener('click', (e) => {
-  if (e.target.closest('.image-card')) {
-    const card = e.target.closest('.image-card');
-    const img = card.querySelector('img');
-    document.getElementById('overlayImg').src = img.src;
-    document.getElementById('overlayTitle').textContent = card.dataset.title;
-    document.getElementById('downloadLink').href = img.src;
-    document.getElementById('overlay').style.left = '0';
-  }
-});
+            // 3. Processar a imagem
+            const file = fileInput.files[0];
+            const reader = new FileReader();
 
-// Fechar overlay
-document.getElementById('closeOverlay').addEventListener('click', () => {
-  document.getElementById('overlay').style.left = '100%';
-});
-</script>
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
 
+                // Criar o elemento do cartão (Card)
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                // Criar a imagem
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                
+                // Criar o botão de download
+                const downloadLink = document.createElement('a');
+                downloadLink.className = 'download-btn';
+                downloadLink.href = imageUrl;
+                downloadLink.download = "wiedlak-download-" + Date.now() + ".png"; // Nome único
+                downloadLink.innerHTML = "⬇"; // Seta simples
+
+                // Montar o cartão
+                card.appendChild(img);
+                card.appendChild(downloadLink);
+
+                // Adicionar no início da galeria
+                gallery.prepend(card);
+
+                // Limpar campos
+                fileInput.value = "";
+                pinInput.value = "";
+                
+                // Feedback visual simples
+                alert("Imagem postada com sucesso na Wiedlak Gallery!");
+            }
+
+            reader.readAsDataURL(file);
+        }
+    </script>
 </body>
-</html>  border-radius: 6px;
-}
-header .btn:hover {background: #005bb5;}
-
-/* ===================== GALLERY ===================== */
-main {
-  padding: 80px 20px 20px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-#gallery {
-  column-count: 4;
-  column-gap: 15px;
-}
-@media(max-width:1200px){#gallery{column-count:3}}
-@media(max-width:900px){#gallery{column-count:2}}
-@media(max-width:600px){#gallery{column-count:1}}
-
-.card {
-  display: inline-block;
-  width: 100%;
-  margin-bottom: 15px;
-  break-inside: avoid;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  transform: translateY(20px);
-  opacity: 0;
-  transition: transform 0.45s ease, opacity 0.45s ease;
-}
-.card.visible {transform: translateY(0); opacity: 1;}
-.card img {width: 100%; display:block; cursor:pointer;}
-.card .meta {padding: 8px 10px; display:flex; justify-content:space-between; align-items:center;}
-.card .title {font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.card .download-btn {background:transparent;border:none;font-size:16px;cursor:pointer;}
-
-/* ===================== UPLOAD MODAL ===================== */
-.overlay {
-  position: fixed;
-  top:0; left:0; right:0; bottom:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background: rgba(0,0,0,0.6);
-  z-index: 2000;
-}
-.panel {
-  background:#fff;
-  border-radius:10px;
-  padding:20px;
-  width: 320px;
-}
-.panel h2 {margin-top:0;}
-.panel input[type="text"], .panel input[type="file"], .panel textarea {
-  width: 100%;
-  padding: 8px;
-  margin: 6px 0;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-.panel button {margin-top:10px; width:100%; background:#0073e6; color:#fff; border:none; padding:8px; border-radius:6px;}
-.panel button:hover {background:#005bb5;}
-.progress {width:100%; height:6px; background: #eee; border-radius:4px; overflow:hidden; margin-top:6px;}
-.progress i {display:block; height:100%; width:0; background: linear-gradient(90deg,#0073e6,#00a3ff);}
-
-/* ===================== DETAIL SLIDE ===================== */
-.detail-overlay {position: fixed; inset:0; display:none; z-index: 3000; background: rgba(0,0,0,0.3);}
-.detail-sheet {
-  position: absolute; right:0; top:0;
-  width: 90%; max-width: 900px;
-  height:100%;
-  background:#fff;
-  display:flex;
-  transform: translateX(100%);
-  transition: transform 0.45s ease;
-  border-radius: 8px 0 0 8px;
-}
-.detail-sheet.show {transform:translateX(0);}
-.detail-left{flex:1;display:flex;align-items:center;justify-content:center;background:#111;}
-.detail-left img{max-width:100%; max-height:100%; object-fit:contain;}
-.detail-right{width:350px; padding:20px; display:flex;flex-direction:column;}
-.detail-right h3{margin:0 0 10px;}
-.detail-right textarea{flex:1; resize:none; padding:8px; border:1px solid #ccc; border-radius:6px;}
-.detail-right .btn-small{margin-top:8px; padding:6px; font-size:14px;}
-</style>
-</head>
-<body>
-
-<header>
-  <h1>Wiedlak Gallery</h1>
-  <button id="uploadBtn" class="btn">Upload</button>
-</header>
-
-<main>
-  <div id="gallery"></div>
-</main>
-
-<!-- Upload modal -->
-<div id="uploadOverlay" class="overlay">
-  <div class="panel">
-    <h2>Upload Image</h2>
-    <input id="codeInput" type="text" placeholder="Enter 5-digit code" maxlength="5">
-    <input id="fileInput" type="file" accept="image/*">
-    <textarea id="descInput" rows="3" placeholder="Optional description"></textarea>
-    <button id="submitUpload">Submit</button>
-    <button id="cancelUpload" style="background:#ccc;color:#111;margin-top:6px;">Cancel</button>
-    <div class="progress"><i></i></div>
-    <div id="uploadMsg" style="font-size:12px;margin-top:4px;color:#555;"></div>
-  </div>
-</div>
-
-<!-- Detail overlay -->
-<div id="detailOverlay" class="detail-overlay">
-  <div class="detail-sheet">
-    <div class="detail-left"><img id="detailImg" src="" alt="Image preview"></div>
-    <div class="detail-right">
-      <h3 id="detailTitle">Title</h3>
-      <textarea id="detailDesc"></textarea>
-      <button id="saveDesc" class="btn-small">Save description</button>
-      <button id="closeDetail" class="btn-small" style="background:#ccc;color:#111;">Close</button>
-      <a id="downloadLink" href="#" download style="margin-top:6px;">Download Image</a>
+</html>
+ink" href="#" download style="margin-top:6px;">Download Image</a>
     </div>
   </div>
 </div>
