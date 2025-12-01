@@ -1,40 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wiedlak Gallery</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-    }
-    header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: #fff;
-      padding: 10px 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 1000;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: #333;
-    }
-    #uploadBtn {
-      padding: 8px 16px;
-      background: #0073e6;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wiedlak Gallery</title>
+<style>
+  body { margin:0; font-family: Arial, sans-serif; background:#f5f5f5; }
+  header {
+    position: fixed; top:0; width:100%; background:#fff; padding:10px 20px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between;
+    align-items:center; z-index:1000;
+  }
+  header h1 { margin:0; font-size:1.5rem; color:#333; }
+  #uploadBtn { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
+  #uploadBtn:hover { background:#005bb5; }
+  main { padding:80px 20px 20px 20px; column-count:4; column-gap:15px; }
+  .image-card { width:100%; margin-bottom:15px; break-inside:avoid; background:#fff;
+    border-radius:5px; overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,0.1);
+    opacity:0; transform: translateY(20px); transition: all 0.5s ease;
+  }
+  .image-card.visible { opacity:1; transform: translateY(0); }
+  .image-card img { width:100%; display:block; cursor:pointer; }
+
+  /* Upload popup */
+  #uploadPopup {
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6);
+    justify-content:center; align-items:center; z-index:2000;
+  }
+  #popupContent { background:#fff; padding:20px; border-radius:8px; text-align:center; width:300px; }
+  #popupContent input[type="file"], #popupContent input[type="text"] {
+    margin:10px 0; padding:5px; width:80%;
+  }
+  #popupContent button { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
+  #popupContent button:hover { background:#005bb5; }
+
+  /* Modal for image detail */
+  #imageModal {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8);
+    justify-content:center; align-items:center; z-index:3000; overflow:hidden;
+  }
+  #modalContent {
+    position:relative; background:#fff; width:80%; max-width:700px; height:80%; border-radius:10px;
+    display:flex; overflow:hidden; transform: translateX(100%); transition: transform 0.5s ease;
+  }
+  #modalContent.show { transform: translateX(0); }
+  #modalContent img { width:60%; object-fit:cover; }
+  #modalInfo { padding:20px; width:40%; display:flex; flex-direction:column; justify-content:center; }
+  #modalInfo h2 { margin:0 0 10px 0; }
+  #modalInfo p { flex:1; }
+  #modalInfo button { padding:8px 16px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
+  #modalInfo button:hover { background:#005bb5; }
+  #closeModal { position:absolute; top:10px; right:10px; background:#ff4b5c; border:none; padding:6px 10px; color:white; border-radius:5px; cursor:pointer; }
+  #closeModal:hover { background:#d43f50; }
+
+  @media(max-width:1200px){ main{ column-count:3; } }
+  @media(max-width:900px){ main{ column-count:2; } }
+  @media(max-width:600px){ main{ column-count:1; } }
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Wiedlak Gallery</h1>
+  <button id="uploadBtn">Upload</button>
+</header>
+
+<main id="gallery">
+  <!-- Images from Firebase will appear here -->
+</main>
+
+<!-- Upload Popup -->
+<div id="uploadPopup">
+  <div id="popupContent">
+    <h2>Upload Image</h2>
+    <p>Enter the 5-digit code:</p>
+    <input type="text" id="codeInput" placeholder="Ex: 12345" maxlength="5">
+    <input type="file" id="imageInput" accept="image/*">
+    <br>
+    <button id="submitBtn">Submit</button>
+    <button id="closePopup">Cancel</button>
+  </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal">
+  <div id="modalContent">
+    <img id="modalImg" src="">
+    <div id="modalInfo">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+      <a id="downloadBtn" href="#" download><button>Download</button></a>
+    </div>
+    <button id="closeModal">X</button>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // ======== Firebase Config ========
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const storage = firebase.storage();
+  const firestore = firebase.firestore();
+
+  const UPLOAD_CODE = "12345"; // change code
+  const uploadBtn = document.getElementById("uploadBtn");
+  const uploadPopup = document.getElementById("uploadPopup");
+  const closePopup = document.getElementById("closePopup");
+  const submitBtn = document.getElementById("submitBtn");
+  const gallery = document.getElementById("gallery");
+
+  // Modal
+  const imageModal = document.getElementById("imageModal");
+  const modalContent = document.getElementById("modalContent");
+  const modalImg = document.getElementById("modalImg");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalDesc = document.getElementById("modalDesc");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const closeModal = document.getElementById("closeModal");
+
+  // Show upload popup
+  uploadBtn.addEventListener("click", ()=> uploadPopup.style.display="flex");
+  closePopup.addEventListener("click", ()=> uploadPopup.style.display="none");
+
+  // Upload image
+  submitBtn.addEventListener("click", ()=>{
+    const code = document.getElementById("codeInput").value;
+    const fileInput = document.getElementById("imageInput");
+    if(code !== UPLOAD_CODE){ alert("Incorrect code!"); return; }
+    if(fileInput.files.length===0){ alert("Select an image!"); return; }
+
+    const file = fileInput.files[0];
+    const fileName = Date.now() + "_" + file.name;
+    const storageRef = storage.ref().child(fileName);
+
+    storageRef.put(file).then(() => {
+      storageRef.getDownloadURL().then((url)=>{
+        firestore.collection("images").add({
+          url: url,
+          title: file.name,
+          description: "No description",
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+    });
+
+    fileInput.value=""; document.getElementById("codeInput").value="";
+    uploadPopup.style.display="none";
+  });
+
+  // Load images from Firestore
+  firestore.collection("images").orderBy("timestamp","desc").onSnapshot(snapshot=>{
+    gallery.innerHTML="";
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      const div = document.createElement("div");
+      div.className="image-card";
+      div.innerHTML=`<img src="${data.url}" alt="${data.title}" data-title="${data.title}" data-desc="${data.description}" data-url="${data.url}">`;
+      gallery.appendChild(div);
+      setTimeout(()=> div.classList.add("visible"), 100); // fade in effect
+    });
+
+    // Add click to open modal
+    document.querySelectorAll(".image-card img").forEach(img=>{
+      img.addEventListener("click", ()=>{
+        modalImg.src = img.dataset.url;
+        modalTitle.textContent = img.dataset.title;
+        modalDesc.textContent = img.dataset.desc;
+        downloadBtn.href = img.dataset.url;
+        imageModal.style.display="flex";
+        setTimeout(()=> modalContent.classList.add("show"), 10);
+      });
+    });
+  });
+
+  closeModal.addEventListener("click", ()=>{
+    modalContent.classList.remove("show");
+    setTimeout(()=> imageModal.style.display="none", 500);
+  });
+
+</script>
+</body>
+</html>    }
     #uploadBtn:hover {
       background: #005bb5;
     }
