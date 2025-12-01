@@ -6,181 +6,226 @@
     <title>Wiedlak Gallery</title>
     <style>
         :root {
-            --primary-color: #e60023; /* Vermelho estilo Pinterest */
-            --bg-color: #ffffff;
-            --text-color: #111111;
-            --gray-hover: #f0f0f0;
-            --card-radius: 16px;
+            --primary: #e60023;
+            --primary-dark: #ad081b;
+            --bg: #ffffff;
+            --text: #111111;
+            --gray-light: #efefef;
+            --gray-medium: #767676;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --radius: 16px;
         }
+
+        * { box-sizing: border-box; outline: none; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Helvetica, "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", メイリオ, Meiryo, "ＭＳ Ｐゴシック", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 50px;
         }
 
-        /* --- Header & Upload Bar --- */
+        /* --- Header --- */
         header {
             position: sticky;
             top: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(5px);
-            padding: 15px 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            z-index: 1000;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            padding: 15px 30px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
+            z-index: 1000;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
         }
 
         .logo {
+            color: var(--primary);
             font-weight: 700;
-            font-size: 24px;
-            color: var(--primary-color);
-            letter-spacing: -1px;
+            font-size: 20px;
             display: flex;
             align-items: center;
             gap: 8px;
+            text-decoration: none;
         }
 
-        .upload-container {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            background: var(--gray-hover);
-            padding: 8px 16px;
-            border-radius: 30px;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .custom-file-upload {
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            padding: 8px 12px;
-            border-radius: 20px;
-            transition: background 0.2s;
-        }
-
-        .custom-file-upload:hover {
-            background: #ddd;
-        }
-
-        input[type="password"] {
-            border: none;
-            background: transparent;
-            outline: none;
-            font-size: 14px;
-            width: 80px;
-            text-align: center;
-        }
-
-        .btn-post {
-            background-color: var(--primary-color);
+        .btn-header {
+            background-color: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 24px;
             font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: 0.2s;
         }
+        .btn-header:hover { background-color: var(--primary-dark); }
 
-        .btn-post:hover {
-            background-color: #ad081b;
-        }
-
-        .btn-post:active {
-            transform: scale(0.95);
-        }
-
-        /* --- Masonry Grid Layout --- */
-        .gallery-container {
-            padding: 20px;
+        /* --- Masonry Grid --- */
+        .gallery-wrapper {
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 30px auto;
+            padding: 0 20px;
         }
 
-        .gallery {
-            column-count: 5; /* Número de colunas no PC */
+        .masonry {
+            column-count: 5;
             column-gap: 16px;
         }
 
-        @media (max-width: 1200px) { .gallery { column-count: 4; } }
-        @media (max-width: 900px) { .gallery { column-count: 3; } }
-        @media (max-width: 600px) { .gallery { column-count: 2; } }
+        @media (max-width: 1200px) { .masonry { column-count: 4; } }
+        @media (max-width: 900px) { .masonry { column-count: 3; } }
+        @media (max-width: 600px) { .masonry { column-count: 2; } }
 
-        /* --- Card (Image) Styles --- */
+        /* --- Card --- */
         .card {
-            break-inside: avoid; /* Evita que a imagem seja cortada entre colunas */
+            break-inside: avoid;
             margin-bottom: 16px;
             position: relative;
-            border-radius: var(--card-radius);
+            border-radius: var(--radius);
             overflow: hidden;
             cursor: zoom-in;
+            transform: translateZ(0); /* Fix para safari */
         }
 
         .card img {
             width: 100%;
             height: auto;
             display: block;
-            border-radius: var(--card-radius);
-            transition: filter 0.3s;
+            border-radius: var(--radius);
         }
 
-        /* Overlay escuro ao passar o mouse */
-        .card::after {
-            content: '';
+        /* Overlay e Botões do Card */
+        .card-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.3);
+            inset: 0;
+            background: rgba(0,0,0,0.4);
             opacity: 0;
             transition: opacity 0.2s;
-            pointer-events: none; /* Deixa clicar no botão abaixo */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 15px;
         }
 
-        .card:hover::after {
-            opacity: 1;
-        }
+        .card:hover .card-overlay { opacity: 1; }
 
-        /* Botão Download */
-        .download-btn {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
+        .btn-download {
             background: white;
             color: black;
             border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
+            border-radius: 24px;
+            padding: 8px 16px;
+            font-weight: 700;
+            text-decoration: none;
+            align-self: flex-end;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        .btn-download:hover { background: var(--gray-light); transform: scale(1.05); }
+
+        /* --- Modal de Upload --- */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            display: none; /* Hidden by default */
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s, transform 0.2s;
-            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-panel {
+            background: white;
+            width: 400px;
+            max-width: 90%;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-panel h2 { margin-top: 0; color: var(--text); }
+
+        .input-group { margin: 20px 0; text-align: left; }
+        .input-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: var(--gray-medium); }
+        
+        .styled-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-light);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+        .styled-input:focus { border-color: var(--primary); }
+
+        /* Custom File Input */
+        .file-drop-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 16px;
             cursor: pointer;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
+        .file-drop-area:hover { background-color: #fafafa; border-color: var(--primary); }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-close {
+            margin-top: 10px;
+            background: transparent;
+            border: none;
+            color: var(--gray-medium);
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
         }
 
-        .card:hover .download-btn {
-            opacity: 1;
+        /* --- Fullscreen Lightbox --- */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
-
-        .download-btn:hover {
-            background-color: #f0f0f0;
-            transform: scale(1.1);
+        .lightbox img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            user-select: none;
         }
 
     </style>
@@ -188,941 +233,143 @@
 <body>
 
     <header>
-        <div class="logo">
+        <a href="#" class="logo">
             <svg height="24" width="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.65 0-5.789 2.738-5.789 5.57 0 1.103.425 2.286.953 2.922.105.126.12.236.089.363-.098.406-.316 1.285-.358 1.466-.057.243-.194.294-.448.177-1.674-.779-2.718-3.23-2.718-5.228 0-4.252 3.091-8.156 8.914-8.156 4.679 0 8.314 3.336 8.314 7.796 0 4.654-2.933 8.406-7.005 8.406-1.367 0-2.652-.709-3.091-1.546l-.841 3.203c-.305 1.174-1.134 2.645-1.691 3.541C9.648 23.907 10.8 24 12 24c6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12z"/></svg>
             Wiedlak Gallery
-        </div>
-
-        <div class="upload-container">
-            <label for="file-upload" class="custom-file-upload">
-                📷 Escolher Foto
-            </label>
-            <input id="file-upload" type="file" accept="image/*"/>
-            
-            <input type="password" id="pin-code" placeholder="PIN (5)" maxlength="5">
-            
-            <button class="btn-post" onclick="uploadImage()">Postar</button>
-        </div>
+        </a>
+        <button class="btn-header" onclick="toggleModal(true)">Postar Imagem</button>
     </header>
 
-    <div class="gallery-container">
-        <div class="gallery" id="gallery">
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1515516089376-88db1e26e9c0?w=500&q=80" alt="Exemplo">
-                <a href="https://images.unsplash.com/photo-1515516089376-88db1e26e9c0?w=500&q=80" download="imagem1.jpg" class="download-btn">⬇</a>
+    <div class="gallery-wrapper">
+        <div class="masonry" id="gallery-grid">
             </div>
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80" alt="Exemplo">
-                <a href="#" class="download-btn">⬇</a>
+    </div>
+
+    <div class="modal-backdrop" id="upload-modal">
+        <div class="modal-panel">
+            <h2>Criar novo Pin</h2>
+            
+            <div class="file-drop-area" onclick="document.getElementById('file-input').click()">
+                <span id="file-label">📂 Clique para escolher imagem</span>
+                <input type="file" id="file-input" accept="image/*" style="display: none" onchange="previewFile()">
             </div>
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500&q=80" alt="Exemplo">
-                <a href="#" class="download-btn">⬇</a>
+
+            <div class="input-group">
+                <label>CÓDIGO DE SEGURANÇA (5 DÍGITOS)</label>
+                <input type="password" id="pin-code" class="styled-input" placeholder="Ex: 12345" maxlength="5">
             </div>
-             <div class="card">
-                <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=500&q=80" alt="Exemplo">
-                <a href="#" class="download-btn">⬇</a>
-            </div>
-             <div class="card">
-                <img src="https://images.unsplash.com/photo-1552083855-e518606bf38b?w=500&q=80" alt="Exemplo">
-                <a href="#" class="download-btn">⬇</a>
-            </div>
+
+            <button class="btn-submit" onclick="processUpload()">Publicar</button>
+            <button class="btn-close" onclick="toggleModal(false)">Cancelar</button>
         </div>
+    </div>
+
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="Tela Cheia">
     </div>
 
     <script>
-        // Configuração do código secreto
-        const SECRET_CODE = "12345"; 
+        /* --- Configuração --- */
+        const SECRET_PIN = "12345";
+        const galleryGrid = document.getElementById('gallery-grid');
 
-        function uploadImage() {
-            const fileInput = document.getElementById('file-upload');
+        // Dados Iniciais (Exemplo)
+        const initialImages = [
+            "https://images.unsplash.com/photo-1549480795-5f56b26d1d4d?w=600&q=80",
+            "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80",
+            "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=600&q=80",
+            "https://images.unsplash.com/photo-1499750310159-529801977349?w=600&q=80",
+            "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=600&q=80"
+        ];
+
+        // Carregar exemplos ao iniciar
+        window.onload = () => {
+            initialImages.forEach(url => createCard(url));
+        };
+
+        /* --- Funções do Modal --- */
+        function toggleModal(show) {
+            const modal = document.getElementById('upload-modal');
+            modal.style.display = show ? 'flex' : 'none';
+            // Resetar campos ao abrir
+            if(show) {
+                document.getElementById('pin-code').value = '';
+                document.getElementById('file-input').value = '';
+                document.getElementById('file-label').innerText = '📂 Clique para escolher imagem';
+            }
+        }
+
+        function previewFile() {
+            const input = document.getElementById('file-input');
+            if (input.files && input.files[0]) {
+                document.getElementById('file-label').innerText = "✅ " + input.files[0].name;
+            }
+        }
+
+        /* --- Lógica de Upload --- */
+        function processUpload() {
             const pinInput = document.getElementById('pin-code');
-            const gallery = document.getElementById('gallery');
+            const fileInput = document.getElementById('file-input');
 
-            // 1. Validação do arquivo
+            // 1. Validar PIN
+            if (pinInput.value !== SECRET_PIN) {
+                alert("⛔ PIN Incorreto! Tente novamente.");
+                pinInput.value = '';
+                return;
+            }
+
+            // 2. Validar Arquivo
             if (fileInput.files.length === 0) {
-                alert("Por favor, selecione uma imagem primeiro!");
+                alert("⚠️ Selecione uma imagem primeiro.");
                 return;
             }
 
-            // 2. Validação do Código de 5 dígitos
-            const userCode = pinInput.value;
-            if (userCode !== SECRET_CODE) {
-                alert("Código incorreto! Digite o PIN de 5 dígitos (Dica: 12345)");
-                pinInput.value = "";
-                pinInput.focus();
-                return;
-            }
-
-            // 3. Processar a imagem
-            const file = fileInput.files[0];
+            // 3. Ler e Postar
             const reader = new FileReader();
-
             reader.onload = function(e) {
                 const imageUrl = e.target.result;
+                createCard(imageUrl, true); // true = adicionar no topo
+                toggleModal(false);
+                alert("✨ Postado com sucesso!");
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
 
-                // Criar o elemento do cartão (Card)
-                const card = document.createElement('div');
-                card.className = 'card';
+        /* --- Criação do Card (HTML) --- */
+        function createCard(url, prepend = false) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // HTML Interno do Card
+            card.innerHTML = `
+                <img src="${url}" alt="Gallery Image" onclick="openLightbox('${url}')">
+                <div class="card-overlay">
+                    <a href="${url}" download="wiedlak_img.jpg" class="btn-download">Baixar</a>
+                </div>
+            `;
 
-                // Criar a imagem
-                const img = document.createElement('img');
-                img.src = imageUrl;
-                
-                // Criar o botão de download
-                const downloadLink = document.createElement('a');
-                downloadLink.className = 'download-btn';
-                downloadLink.href = imageUrl;
-                downloadLink.download = "wiedlak-download-" + Date.now() + ".png"; // Nome único
-                downloadLink.innerHTML = "⬇"; // Seta simples
-
-                // Montar o cartão
-                card.appendChild(img);
-                card.appendChild(downloadLink);
-
-                // Adicionar no início da galeria
-                gallery.prepend(card);
-
-                // Limpar campos
-                fileInput.value = "";
-                pinInput.value = "";
-                
-                // Feedback visual simples
-                alert("Imagem postada com sucesso na Wiedlak Gallery!");
+            if (prepend) {
+                galleryGrid.prepend(card);
+            } else {
+                galleryGrid.appendChild(card);
             }
+        }
 
-            reader.readAsDataURL(file);
+        /* --- Lightbox (Zoom) --- */
+        function openLightbox(url) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = url;
+            lightbox.style.display = 'flex';
+        }
+
+        function closeLightbox(e) {
+            // Fecha se clicar fora da imagem ou no X
+            if (e.target !== document.getElementById('lightbox-img')) {
+                document.getElementById('lightbox').style.display = 'none';
+            }
         }
     </script>
-</body>
-</html>
-ink" href="#" download style="margin-top:6px;">Download Image</a>
-    </div>
-  </div>
-</div>
-
-<script>
-/* CONFIG */
-const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY"; // replace with your key
-const ALLOWED_CODES = ["12345","22222"];
-const STORAGE_KEY = "wiedlak_images";
-
-/* DOM */
-const uploadBtn = document.getElementById('uploadBtn');
-const uploadOverlay = document.getElementById('uploadOverlay');
-const cancelUpload = document.getElementById('cancelUpload');
-const submitUpload = document.getElementById('submitUpload');
-const codeInput = document.getElementById('codeInput');
-const fileInput = document.getElementById('fileInput');
-const descInput = document.getElementById('descInput');
-const uploadMsg = document.getElementById('uploadMsg');
-const gallery = document.getElementById('gallery');
-const progressBar = document.querySelector('.progress i');
-
-const detailOverlay = document.getElementById('detailOverlay');
-const detailSheet = document.querySelector('.detail-sheet');
-const detailImg = document.getElementById('detailImg');
-const detailTitle = document.getElementById('detailTitle');
-const detailDesc = document.getElementById('detailDesc');
-const saveDesc = document.getElementById('saveDesc');
-const closeDetail = document.getElementById('closeDetail');
-const downloadLink = document.getElementById('downloadLink');
-
-/* STATE */
-let images = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
-let currentIdx = null;
-
-/* FUNCTIONS */
-function persist(){localStorage.setItem(STORAGE_KEY, JSON.stringify(images));}
-function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
-function renderGallery(){
-  gallery.innerHTML='';
-  images.forEach((it,idx)=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.innerHTML=`<img src="${it.url}" data-idx="${idx}"><div class="meta"><span class="title">${escapeHtml(it.title||'Untitled')}</span><button class="download-btn" data-idx="${idx}">⬇</button></div>`;
-    gallery.appendChild(card);
-    setTimeout(()=>card.classList.add('visible'),50+idx*40);
-  });
-  gallery.querySelectorAll('img[data-idx]').forEach(img=>{
-    img.onclick=e=>openDetail(Number(img.dataset.idx));
-  });
-  gallery.querySelectorAll('button.download-btn').forEach(btn=>{
-    btn.onclick=e=>{
-      const idx=Number(btn.dataset.idx);
-      const link=document.createElement('a');
-      link.href=images[idx].url;
-      link.download=images[idx].title||'image';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    };
-  });
-}
-
-function show(el){el.style.display='flex';}
-function hide(el){el.style.display='none';}
-
-/* UPLOAD */
-uploadBtn.onclick=()=>{codeInput.value='';fileInput.value='';descInput.value='';uploadMsg.textContent='';progressBar.style.width='0%';show(uploadOverlay);}
-cancelUpload.onclick=()=>hide(uploadOverlay);
-
-function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej('File read error');r.readAsDataURL(file);});}
-
-async function doUpload(file,name,desc){
-  const base64 = await fileToBase64(file);
-  const form = new FormData();
-  form.append('key',IMGBB_API_KEY);
-  form.append('image',base64);
-  form.append('name',name);
-
-  return new Promise((resolve,reject)=>{
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST','https://api.imgbb.com/1/upload');
-    xhr.upload.onprogress = e => {if(e.lengthComputable){progressBar.style.width=Math.round((e.loaded/e.total)*100)+'%';}};
-    xhr.onload=()=>{try{const resp=JSON.parse(xhr.responseText);if(resp.success)resolve(resp.data);else reject(resp.error.message||'Upload error');}catch(err){reject(err);}};
-    xhr.onerror=()=>reject('Network error');
-    xhr.send(form);
-  });
-}
-
-submitUpload.onclick=async()=>{
-  const code=codeInput.value.trim();
-  const file=fileInput.files[0];
-  const desc=descInput.value||'';
-  if(!ALLOWED_CODES.includes(code)){uploadMsg.textContent='Incorrect code';return;}
-  if(!file){uploadMsg.textContent='Select an image';return;}
-  uploadMsg.textContent='Uploading...';
-  try{
-    const data=await doUpload(file,file.name.replace(/\s+/g,'_'),desc);
-    const item={id:Date.now()+'_'+Math.floor(Math.random()*10000),url:data.display_url,title:file.name,desc:desc};
-    images.unshift(item);
-    persist();
-    renderGallery();
-    uploadMsg.textContent='Uploaded!';
-    setTimeout(()=>hide(uploadOverlay),800);
-  }catch(e){uploadMsg.textContent='Error: '+e;}
-};
-
-/* DETAIL */
-function openDetail(idx){
-  currentIdx=idx;
-  const it=images[idx];
-  detailImg.src=it.url;
-  detailTitle.textContent=it.title||'Image';
-  detailDesc.value=it.desc||'';
-  downloadLink.href=it.url;
-  downloadLink.download=it.title||'image';
-  show(detailOverlay);
-  setTimeout(()=>detailSheet.classList.add('show'),20);
-}
-closeDetail.onclick=()=>{detailSheet.classList.remove('show');setTimeout(()=>hide(detailOverlay),450);}
-saveDesc.onclick=()=>{if(currentIdx===null)return;images[currentIdx].desc=detailDesc.value;persist();renderGallery();saveDesc.textContent='Saved ✓';setTimeout(()=>saveDesc.textContent='Save description',1200);}
-
-/* INIT */
-renderGallery();
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){hide(uploadOverlay);detailSheet.classList.remove('show');setTimeout(()=>hide(detailOverlay),450);}});
-</script>
-
-</body>
-</html>  h1{font-size:16px;margin:0;}
-  .actions{display:flex;align-items:center;gap:10px}
-
-  /* Upload button */
-  button.btn{
-    background:var(--accent); color:#fff; border:0; padding:8px 14px; border-radius:8px; cursor:pointer;
-    font-weight:600; box-shadow: 0 6px 14px rgba(3,102,214,0.12);
-  }
-  button.btn:hover{background:var(--accent-dark)}
-
-  /* Gallery grid */
-  main{padding:88px 18px 40px; max-width:1200px; margin:0 auto}
-  #gallery{ column-count:4; column-gap:16px; }
-  @media(max-width:1200px){#gallery{column-count:3}}
-  @media(max-width:900px){#gallery{column-count:2}}
-  @media(max-width:600px){#gallery{column-count:1}}
-
-  .card{
-    display:inline-block; width:100%; margin:0 0 16px; break-inside:avoid; background:var(--card);
-    border-radius:10px; overflow:hidden; box-shadow:0 6px 18px rgba(10,20,30,0.06);
-    transform:translateY(18px); opacity:0; transition:transform .45s cubic-bezier(.2,.9,.3,1),opacity .4s;
-  }
-  .card.visible{transform:none; opacity:1}
-  .card img{width:100%; display:block; cursor:pointer; user-select:none}
-  .card .meta{padding:10px 12px; display:flex; align-items:center; justify-content:space-between}
-  .meta .title{font-size:13px; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .meta .icons{display:flex;gap:8px; align-items:center}
-
-  .icon-btn{
-    background:transparent; border:0; cursor:pointer; padding:6px; border-radius:6px;
-  }
-  .icon-btn:hover{background:rgba(0,0,0,0.04)}
-
-  /* Upload modal */
-  .overlay{position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; align-items:center; justify-content:center; z-index:1200}
-  .panel{
-    width:360px; max-width:96%; background:var(--card); border-radius:12px; padding:18px; box-shadow:0 20px 60px rgba(5,10,20,0.3);
-  }
-  .panel h2{margin:0 0 8px; font-size:18px}
-  .field{margin:8px 0; display:flex;flex-direction:column; gap:6px}
-  input[type="text"], input[type="file"], textarea{
-    width:100%; padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.08);
-    font-size:14px; background: #fff;
-  }
-  .muted{font-size:13px;color:var(--muted)}
-
-  /* Modal detail (slide from right) */
-  .detail-overlay{position:fixed; inset:0; display:none; z-index:1300}
-  .detail-sheet{
-    position:absolute; right:0; top:0; height:100%; width:92%; max-width:980px; background:#fff;
-    display:flex; gap:0; transform:translateX(100%); transition:transform .45s cubic-bezier(.2,.9,.3,1);
-    box-shadow: -24px 0 60px rgba(8,20,40,0.35);
-  }
-  .detail-sheet.show{transform:translateX(0)}
-  .detail-left{flex:1; background:#111; display:flex; align-items:center; justify-content:center}
-  .detail-left img{max-width:100%; max-height:100%; object-fit:contain}
-  .detail-right{width:380px; padding:20px; display:flex;flex-direction:column}
-  .detail-right h3{margin:0 0 10px}
-  .detail-right textarea{flex:1; resize:none; border:1px solid rgba(0,0,0,0.06); padding:10px; border-radius:8px}
-  .detail-actions{display:flex; gap:10px; margin-top:12px}
-  .small{font-size:13px}
-
-  /* small helpers */
-  .row{display:flex; gap:10px; align-items:center}
-  .progress{height:8px; width:100%; background:rgba(0,0,0,0.06); border-radius:6px; overflow:hidden}
-  .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#00a3ff)}
-  .center{display:flex;align-items:center;justify-content:center}
-</style>
-</head>
-<body>
-
-<header>
-  <div class="brand">
-    <div class="logo">W</div>
-    <div>
-      <h1>Wiedlak Gallery</h1>
-      <div class="muted small">A simple image board</div>
-    </div>
-  </div>
-
-  <div class="actions">
-    <button id="uploadBtn" class="btn">Upload</button>
-  </div>
-</header>
-
-<main>
-  <div id="gallery" aria-live="polite"></div>
-</main>
-
-<!-- Upload overlay -->
-<div id="uploadOverlay" class="overlay" aria-hidden="true">
-  <div class="panel" role="dialog" aria-modal="true">
-    <h2>Upload image</h2>
-    <div class="field">
-      <label class="muted small">Enter 5-digit code</label>
-      <input id="codeInput" type="text" placeholder="e.g. 12345" maxlength="5" inputmode="numeric" />
-    </div>
-    <div class="field">
-      <label class="muted small">Image file</label>
-      <input id="fileInput" type="file" accept="image/*"/>
-    </div>
-    <div class="field">
-      <label class="muted small">Description (optional)</label>
-      <textarea id="descInput" rows="3" placeholder="Write a short description..."></textarea>
-    </div>
-
-    <div class="field">
-      <div class="row">
-        <div style="flex:1">
-          <button id="submitUpload" class="btn">Submit</button>
-        </div>
-        <div style="width:110px; text-align:right">
-          <button id="cancelUpload" class="btn" style="background:#ddd;color:#111">Cancel</button>
-        </div>
-      </div>
-      <div style="height:10px;margin-top:8px" class="progress" id="uploadProgress" aria-hidden="true"><i></i></div>
-      <div id="uploadMsg" class="muted small" style="margin-top:8px"></div>
-    </div>
-    <div style="margin-top:10px;font-size:12px;color:#666">
-      Uses <strong>ImgBB</strong> to host images. Replace API key in code. Images and metadata are also saved in your browser (localStorage).
-    </div>
-  </div>
-</div>
-
-<!-- Detail slide sheet -->
-<div id="detailOverlay" class="detail-overlay" aria-hidden="true">
-  <div id="detailSheet" class="detail-sheet" role="dialog" aria-modal="true">
-    <div class="detail-left center">
-      <img id="detailImg" src="" alt="Image preview"/>
-    </div>
-    <div class="detail-right">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3 id="detailTitle">Title</h3>
-        <div>
-          <a id="downloadLink" href="#" download><button class="btn">Download</button></a>
-        </div>
-      </div>
-      <div class="muted small" style="margin-bottom:8px">Description</div>
-      <textarea id="detailDesc" placeholder="Add a description..."></textarea>
-      <div class="detail-actions">
-        <button id="saveDesc" class="btn">Save description</button>
-        <button id="closeDetail" class="btn" style="background:#eee;color:#111">Close</button>
-      </div>
-      <div style="margin-top:10px" class="small muted">Saved locally in your browser.</div>
-    </div>
-  </div>
-</div>
-
-<script>
-/* ==========================
-   CONFIG
-   ==========================
-   - Replace IMGBB_API_KEY with your key from https://imgbb.com/
-   - Allowed upload codes can be edited below
-*/
-const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY"; // <<---- put your key here
-const ALLOWED_CODES = ["12345","22222"];    // allowed 5-digit upload codes
-const STORAGE_KEY = "wiedlak_images_v1";
-
-/* ==========================
-   UTIL & DOM
-   ========================== */
-const uploadBtn = document.getElementById('uploadBtn');
-const uploadOverlay = document.getElementById('uploadOverlay');
-const cancelUpload = document.getElementById('cancelUpload');
-const submitUpload = document.getElementById('submitUpload');
-const codeInput = document.getElementById('codeInput');
-const fileInput = document.getElementById('fileInput');
-const descInput = document.getElementById('descInput');
-const uploadProgress = document.getElementById('uploadProgress');
-const uploadMsg = document.getElementById('uploadMsg');
-
-const gallery = document.getElementById('gallery');
-
-const detailOverlay = document.getElementById('detailOverlay');
-const detailSheet = document.getElementById('detailSheet');
-const detailImg = document.getElementById('detailImg');
-const detailTitle = document.getElementById('detailTitle');
-const detailDesc = document.getElementById('detailDesc');
-const saveDesc = document.getElementById('saveDesc');
-const closeDetail = document.getElementById('closeDetail');
-const downloadLink = document.getElementById('downloadLink');
-
-/* ==========================
-   State: load from localStorage
-   ========================== */
-let images = [];
-try{
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw) images = JSON.parse(raw);
-} catch(e){ images = []; }
-
-function persist(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
-}
-
-/* ==========================
-   Render
-   ========================== */
-function renderGallery(){
-  gallery.innerHTML = '';
-  images.forEach((it, idx)=>{
-    const card = document.createElement('article');
-    card.className = 'card';
-    card.innerHTML = `
-      <img src="${it.url}" alt="${escapeHtml(it.title||'image')}" data-idx="${idx}" loading="lazy">
-      <div class="meta">
-        <div class="title">${escapeHtml(it.title||'Untitled')}</div>
-        <div class="icons">
-          <button class="icon-btn" data-action="download" data-idx="${idx}" title="Download">⬇</button>
-        </div>
-      </div>
-    `;
-    gallery.appendChild(card);
-    // reveal animation
-    setTimeout(()=>card.classList.add('visible'), 50 + idx*40);
-  });
-
-  // attach events
-  gallery.querySelectorAll('img[data-idx]').forEach(img=>{
-    img.addEventListener('click', e=>{
-      const idx = Number(img.dataset.idx);
-      openDetail(idx);
-    });
-  });
-  gallery.querySelectorAll('button[data-action="download"]').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      const idx = Number(btn.dataset.idx);
-      const link = document.createElement('a');
-      link.href = images[idx].url;
-      link.download = images[idx].title || 'image';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    });
-  });
-}
-
-/* ==========================
-   Helpers
-   ========================== */
-function escapeHtml(s){
-  return String(s||'').replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-}
-
-function showOverlay(el){
-  el.style.display = 'flex';
-  el.setAttribute('aria-hidden','false');
-}
-function hideOverlay(el){
-  el.style.display = 'none';
-  el.setAttribute('aria-hidden','true');
-}
-
-/* ==========================
-   Upload flow (ImgBB)
-   ========================== */
-uploadBtn.addEventListener('click', ()=> {
-  codeInput.value='';
-  fileInput.value='';
-  descInput.value='';
-  uploadProgress.querySelector('i').style.width = '0%';
-  uploadMsg.textContent = '';
-  showOverlay(uploadOverlay);
-});
-
-cancelUpload.addEventListener('click', ()=> hideOverlay(uploadOverlay));
-
-// Utility: convert file to base64 string
-function fileToBase64(file){
-  return new Promise((res, rej)=>{
-    const r = new FileReader();
-    r.onload = ()=>res(r.result.split(',')[1]); // only base64 portion
-    r.onerror = ()=>rej(new Error("Failed reading file"));
-    r.readAsDataURL(file);
-  });
-}
-
-async function doUpload(file, title, desc, onProgress){
-  if(!IMGBB_API_KEY || IMGBB_API_KEY === 'YOUR_IMGBB_API_KEY'){
-    throw new Error('ImgBB API key not configured. Put your key in the code (IMGBB_API_KEY).');
-  }
-  // read base64
-  const base64 = await fileToBase64(file);
-
-  // build formdata
-  const form = new FormData();
-  form.append('key', IMGBB_API_KEY);
-  form.append('image', base64);
-  form.append('name', title);
-
-  // fetch with progress using XHR to track progress
-  return new Promise((resolve, reject)=>{
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://api.imgbb.com/1/upload');
-    xhr.upload.onprogress = e=>{
-      if(e.lengthComputable && onProgress) {
-        const p = Math.round((e.loaded / e.total) * 100);
-        onProgress(p);
-      }
-    };
-    xhr.onload = ()=>{
-      try{
-        const resp = JSON.parse(xhr.responseText);
-        if(resp && resp.success && resp.data && resp.data.display_url){
-          resolve(resp.data);
-        } else {
-          reject(new Error('Upload failed: ' + (resp && resp.error && resp.error.message || 'unknown')));
-        }
-      }catch(err){ reject(err) }
-    };
-    xhr.onerror = ()=> reject(new Error('Network error during upload'));
-    xhr.send(form);
-  });
-}
-
-submitUpload.addEventListener('click', async ()=>{
-  const code = (codeInput.value || '').trim();
-  const file = fileInput.files[0];
-  const desc = descInput.value || '';
-
-  if(!ALLOWED_CODES.includes(code)){
-    uploadMsg.textContent = 'Incorrect code.';
-    return;
-  }
-  if(!file){
-    uploadMsg.textContent = 'Please select an image file.';
-    return;
-  }
-  // basic size guard (ImgBB supports up to 32MB, but be cautious)
-  if(file.size > 32 * 1024 * 1024){
-    uploadMsg.textContent = 'File too large (>32MB).';
-    return;
-  }
-
-  uploadMsg.textContent = 'Uploading...';
-  uploadProgress.style.display = 'block';
-
-  try{
-    const data = await doUpload(file, file.name.replace(/\s+/g,'_'), desc, p=>{
-      uploadProgress.querySelector('i').style.width = p + '%';
-    });
-
-    // push to local state + persist
-    const newItem = {
-      id: Date.now() + '_' + Math.floor(Math.random()*10000),
-      url: data.display_url,
-      title: file.name,
-      desc: desc || '',
-      created: (new Date()).toISOString()
-    };
-    images.unshift(newItem);
-    persist();
-    renderGallery();
-
-    uploadMsg.textContent = 'Uploaded successfully!';
-    setTimeout(()=> {
-      hideOverlay(uploadOverlay);
-      uploadProgress.querySelector('i').style.width = '0%';
-      uploadMsg.textContent = '';
-    },900);
-
-  }catch(err){
-    uploadMsg.textContent = 'Upload error: ' + (err.message || err);
-    uploadProgress.querySelector('i').style.width = '0%';
-  }
-});
-
-/* ==========================
-   Detail sheet behavior
-   ========================== */
-let currentIdx = null;
-function openDetail(idx){
-  currentIdx = idx;
-  const it = images[idx];
-  if(!it) return;
-  detailImg.src = it.url;
-  detailTitle.textContent = it.title || 'Image';
-  detailDesc.value = it.desc || '';
-  downloadLink.href = it.url;
-  downloadLink.download = it.title || 'image';
-  showOverlay(detailOverlay);
-  setTimeout(()=> detailSheet.classList.add('show'), 20);
-}
-
-closeDetail.addEventListener('click', ()=> {
-  detailSheet.classList.remove('show');
-  setTimeout(()=> hideOverlay(detailOverlay), 420);
-});
-
-saveDesc.addEventListener('click', ()=>{
-  if(currentIdx === null) return;
-  images[currentIdx].desc = detailDesc.value;
-  persist();
-  renderGallery();
-  // keep open and show a small confirmation
-  saveDesc.textContent = 'Saved ✓';
-  setTimeout(()=> (saveDesc.textContent = 'Save description'), 1200);
-});
-
-/* ==========================
-   Initial render
-   ========================== */
-renderGallery();
-
-/* ==========================
-   Small UX: close overlays with ESC
-   ========================== */
-document.addEventListener('keydown', e=>{
-  if(e.key === 'Escape'){
-    if(uploadOverlay.style.display === 'flex') hideOverlay(uploadOverlay);
-    if(detailOverlay.style.display === 'flex'){ detailSheet.classList.remove('show'); setTimeout(()=> hideOverlay(detailOverlay),420) }
-  }
-});
-</script>
-</body>
-</html>
-    const uploadBtn = document.getElementById("uploadBtn");
-    const fileInput = document.getElementById("fileInput");
-    const gallery = document.getElementById("gallery");
-
-    uploadBtn.addEventListener("click", () => fileInput.click());
-
-    fileInput.addEventListener("change", async () => {
-      const file = fileInput.files[0];
-      if (!file) return;
-
-      // Ler como base64
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result.split(",")[1]; // remove data:image/...;base64,
-
-        // Fazer upload para Imgbb
-        const form = new FormData();
-        form.append("key", IMGBB_API_KEY);
-        form.append("image", base64);
-
-        const resp = await fetch("https://api.imgbb.com/1/upload", {
-          method: "POST",
-          body: form
-        });
-        const data = await resp.json();
-        if (data.success) {
-          const url = data.data.display_url; // URL da imagem
-          console.log("Uploaded:", url);
-
-          // Criar card de imagem
-          const div = document.createElement("div");
-          div.className = "image-card";
-          div.innerHTML = `<img src="${url}" alt="Uploaded Image">`;
-          gallery.prepend(div);
-        } else {
-          alert("Upload failed");
-        }
-      };
-      reader.readAsDataURL(file);
-      fileInput.value = "";
-    });
-  </script>
-</body>
-</html>"></p>
-      <a id="downloadBtn" href="#" download><button>Download</button></a>
-    </div>
-    <button id="closeModal">X</button>
-  </div>
-</div>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-  // ======== Firebase Config ========
-  const firebaseConfig = {
-    apiKey: "cdf1e8785e17a9d558e83ebb6def73c7",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const storage = firebase.storage();
-  const firestore = firebase.firestore();
-
-  const UPLOAD_CODE = "12345"; // change code
-  const uploadBtn = document.getElementById("uploadBtn");
-  const uploadPopup = document.getElementById("uploadPopup");
-  const closePopup = document.getElementById("closePopup");
-  const submitBtn = document.getElementById("submitBtn");
-  const gallery = document.getElementById("gallery");
-
-  // Modal
-  const imageModal = document.getElementById("imageModal");
-  const modalContent = document.getElementById("modalContent");
-  const modalImg = document.getElementById("modalImg");
-  const modalTitle = document.getElementById("modalTitle");
-  const modalDesc = document.getElementById("modalDesc");
-  const downloadBtn = document.getElementById("downloadBtn");
-  const closeModal = document.getElementById("closeModal");
-
-  // Show upload popup
-  uploadBtn.addEventListener("click", ()=> uploadPopup.style.display="flex");
-  closePopup.addEventListener("click", ()=> uploadPopup.style.display="none");
-
-  // Upload image
-  submitBtn.addEventListener("click", ()=>{
-    const code = document.getElementById("codeInput").value;
-    const fileInput = document.getElementById("imageInput");
-    if(code !== UPLOAD_CODE){ alert("Incorrect code!"); return; }
-    if(fileInput.files.length===0){ alert("Select an image!"); return; }
-
-    const file = fileInput.files[0];
-    const fileName = Date.now() + "_" + file.name;
-    const storageRef = storage.ref().child(fileName);
-
-    storageRef.put(file).then(() => {
-      storageRef.getDownloadURL().then((url)=>{
-        firestore.collection("images").add({
-          url: url,
-          title: file.name,
-          description: "No description",
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      });
-    });
-
-    fileInput.value=""; document.getElementById("codeInput").value="";
-    uploadPopup.style.display="none";
-  });
-
-  // Load images from Firestore
-  firestore.collection("images").orderBy("timestamp","desc").onSnapshot(snapshot=>{
-    gallery.innerHTML="";
-    snapshot.forEach(doc=>{
-      const data = doc.data();
-      const div = document.createElement("div");
-      div.className="image-card";
-      div.innerHTML=`<img src="${data.url}" alt="${data.title}" data-title="${data.title}" data-desc="${data.description}" data-url="${data.url}">`;
-      gallery.appendChild(div);
-      setTimeout(()=> div.classList.add("visible"), 100); // fade in effect
-    });
-
-    // Add click to open modal
-    document.querySelectorAll(".image-card img").forEach(img=>{
-      img.addEventListener("click", ()=>{
-        modalImg.src = img.dataset.url;
-        modalTitle.textContent = img.dataset.title;
-        modalDesc.textContent = img.dataset.desc;
-        downloadBtn.href = img.dataset.url;
-        imageModal.style.display="flex";
-        setTimeout(()=> modalContent.classList.add("show"), 10);
-      });
-    });
-  });
-
-  closeModal.addEventListener("click", ()=>{
-    modalContent.classList.remove("show");
-    setTimeout(()=> imageModal.style.display="none", 500);
-  });
-
-</script>
-</body>
-</html>    }
-    #uploadBtn:hover {
-      background: #005bb5;
-    }
-    main {
-      padding: 80px 20px 20px 20px;
-      column-count: 4;
-      column-gap: 15px;
-    }
-    .image-card {
-      width: 100%;
-      margin-bottom: 15px;
-      break-inside: avoid;
-      background: #fff;
-      border-radius: 5px;
-      overflow: hidden;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-    }
-    .image-card img {
-      width: 100%;
-      display: block;
-    }
-
-    /* Popup */
-    #uploadPopup {
-      display: none;
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-    }
-    #popupContent {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      width: 300px;
-    }
-    #popupContent input[type="file"] {
-      margin-top: 10px;
-    }
-    #popupContent input[type="text"] {
-      padding: 5px;
-      width: 80%;
-      margin-bottom: 10px;
-      margin-top: 10px;
-    }
-    #popupContent button {
-      padding: 8px 16px;
-      background: #0073e6;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #popupContent button:hover {
-      background: #005bb5;
-    }
-
-    @media (max-width: 1200px) { main { column-count: 3; } }
-    @media (max-width: 900px) { main { column-count: 2; } }
-    @media (max-width: 600px) { main { column-count: 1; } }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Wiedlak Gallery</h1>
-    <button id="uploadBtn">Upload</button>
-  </header>
-
-  <main id="gallery">
-    <!-- Images will appear here -->
-  </main>
-
-  <!-- Upload Popup -->
-  <div id="uploadPopup">
-    <div id="popupContent">
-      <h2>Upload Image</h2>
-      <p>Enter the 5-digit code:</p>
-      <input type="text" id="codeInput" placeholder="Ex: 12345" maxlength="5">
-      <br>
-      <input type="file" id="imageInput" accept="image/*">
-      <br><br>
-      <button id="submitBtn">Submit</button>
-      <br><br>
-      <button id="closePopup">Cancel</button>
-    </div>
-  </div>
-
-  <script>
-    const UPLOAD_CODE = "12345"; // Change this code as needed
-    const uploadBtn = document.getElementById("uploadBtn");
-    const uploadPopup = document.getElementById("uploadPopup");
-    const closePopup = document.getElementById("closePopup");
-    const submitBtn = document.getElementById("submitBtn");
-    const gallery = document.getElementById("gallery");
-
-    uploadBtn.addEventListener("click", () => {
-      uploadPopup.style.display = "flex";
-    });
-
-    closePopup.addEventListener("click", () => {
-      uploadPopup.style.display = "none";
-    });
-
-    submitBtn.addEventListener("click", () => {
-      const code = document.getElementById("codeInput").value;
-      const fileInput = document.getElementById("imageInput");
-      if(code !== UPLOAD_CODE) {
-        alert("Incorrect code!");
-        return;
-      }
-      if(fileInput.files.length === 0){
-        alert("Please select an image!");
-        return;
-      }
-
-      const file = fileInput.files[0];
-      const reader = new FileReader();
-      reader.onload = function(e){
-        const imgDiv = document.createElement("div");
-        imgDiv.className = "image-card";
-        imgDiv.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
-        gallery.prepend(imgDiv); // add to top
-      }
-      reader.readAsDataURL(file);
-
-      // Reset and close popup
-      fileInput.value = "";
-      document.getElementById("codeInput").value = "";
-      uploadPopup.style.display = "none";
-    });
-  </script>
 </body>
 </html>
