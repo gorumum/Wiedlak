@@ -1,5 +1,6 @@
 npm init -y
 npm install express multer
+node server.js
 // server.js
 
 const express = require('express');
