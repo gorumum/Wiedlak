@@ -1,14 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Wiedlak</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wiedlak Gallery</title>
   <style>
-    body { background:#111; color:#fff; font-family:Arial; text-align:center; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #fff;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #333;
+    }
+    #uploadBtn {
+      padding: 8px 16px;
+      background: #0073e6;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #uploadBtn:hover {
+      background: #005bb5;
+    }
+    main {
+      padding: 80px 20px 20px 20px;
+      column-count: 4;
+      column-gap: 15px;
+    }
+    .image-card {
+      width: 100%;
+      margin-bottom: 15px;
+      break-inside: avoid;
+      background: #fff;
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    }
+    .image-card img {
+      width: 100%;
+      display: block;
+    }
+
+    /* Popup */
+    #uploadPopup {
+      display: none;
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    #popupContent {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      width: 300px;
+    }
+    #popupContent input[type="file"] {
+      margin-top: 10px;
+    }
+    #popupContent input[type="text"] {
+      padding: 5px;
+      width: 80%;
+      margin-bottom: 10px;
+      margin-top: 10px;
+    }
+    #popupContent button {
+      padding: 8px 16px;
+      background: #0073e6;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #popupContent button:hover {
+      background: #005bb5;
+    }
+
+    @media (max-width: 1200px) { main { column-count: 3; } }
+    @media (max-width: 900px) { main { column-count: 2; } }
+    @media (max-width: 600px) { main { column-count: 1; } }
   </style>
 </head>
 <body>
-  <h1>Wiedlak.com</h1>
-  <p>Galeria em construção!</p>
+  <header>
+    <h1>Wiedlak Gallery</h1>
+    <button id="uploadBtn">Upload</button>
+  </header>
+
+  <main id="gallery">
+    <!-- Imagens adicionadas aqui -->
+  </main>
+
+  <!-- Popup de upload -->
+  <div id="uploadPopup">
+    <div id="popupContent">
+      <h2>Upload de Imagem</h2>
+      <p>Insira o código de 5 dígitos:</p>
+      <input type="text" id="codeInput" placeholder="Ex: 12345" maxlength="5">
+      <br>
+      <input type="file" id="imageInput" accept="image/*">
+      <br><br>
+      <button id="submitBtn">Enviar</button>
+      <br><br>
+      <button id="closePopup">Cancelar</button>
+    </div>
+  </div>
+
+  <script>
+    const UPLOAD_CODE = "12345"; // código de 5 dígitos que você escolhe
+    const uploadBtn = document.getElementById("uploadBtn");
+    const uploadPopup = document.getElementById("uploadPopup");
+    const closePopup = document.getElementById("closePopup");
+    const submitBtn = document.getElementById("submitBtn");
+    const gallery = document.getElementById("gallery");
+
+    uploadBtn.addEventListener("click", () => {
+      uploadPopup.style.display = "flex";
+    });
+
+    closePopup.addEventListener("click", () => {
+      uploadPopup.style.display = "none";
+    });
+
+    submitBtn.addEventListener("click", () => {
+      const code = document.getElementById("codeInput").value;
+      const fileInput = document.getElementById("imageInput");
+      if(code !== UPLOAD_CODE) {
+        alert("Código incorreto!");
+        return;
+      }
+      if(fileInput.files.length === 0){
+        alert("Selecione uma imagem!");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e){
+        const imgDiv = document.createElement("div");
+        imgDiv.className = "image-card";
+        imgDiv.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
+        gallery.prepend(imgDiv); // adiciona no topo
+      }
+      reader.readAsDataURL(file);
+
+      // Reset e fechar popup
+      fileInput.value = "";
+      document.getElementById("codeInput").value = "";
+      uploadPopup.style.display = "none";
+    });
+  </script>
 </body>
 </html>
