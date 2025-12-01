@@ -1,40 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wiedlak Gallery</title>
 <style>
-  :root{
-    --accent:#0073e6;
-    --accent-dark:#005bb5;
-    --bg:#f5f7fa;
-    --card:#ffffff;
-    --muted:#666;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
-    background:var(--bg);
-    color:#111;
-    -webkit-font-smoothing:antialiased;
-  }
+/* ===================== GLOBAL ===================== */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  color: #111;
+}
+button {cursor:pointer;}
+a {text-decoration:none; color: inherit;}
 
-  /* Header */
-  header{
-    position:fixed; top:0; left:0; right:0;
-    height:64px; display:flex; align-items:center; justify-content:space-between;
-    padding:0 20px; background:rgba(255,255,255,0.9); backdrop-filter: blur(4px);
-    border-bottom:1px solid rgba(0,0,0,0.04); z-index:1100;
-  }
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{
-    width:42px;height:42px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#00a3ff);
-    display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:700;
-    box-shadow:0 6px 18px rgba(3,102,214,0.12);
-  }
-  h1{font-size:16px;margin:0;}
+/* ===================== HEADER ===================== */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 60px;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+header h1 {margin:0; font-size: 18px;}
+header .btn {
+  background: #0073e6;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+header .btn:hover {background: #005bb5;}
+
+/* ===================== GALLERY ===================== */
+main {
+  padding: 80px 20px 20px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+#gallery {
+  column-count: 4;
+  column-gap: 15px;
+}
+@media(max-width:1200px){#gallery{column-count:3}}
+@media(max-width:900px){#gallery{column-count:2}}
+@media(max-width:600px){#gallery{column-count:1}}
+
+.card {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 15px;
+  break-inside: avoid;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  transform: translateY(20px);
+  opacity: 0;
+  transition: transform 0.45s ease, opacity 0.45s ease;
+}
+.card.visible {transform: translateY(0); opacity: 1;}
+.card img {width: 100%; display:block; cursor:pointer;}
+.card .meta {padding: 8px 10px; display:flex; justify-content:space-between; align-items:center;}
+.card .title {font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.card .download-btn {background:transparent;border:none;font-size:16px;cursor:pointer;}
+
+/* ===================== UPLOAD MODAL ===================== */
+.overlay {
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+}
+.panel {
+  background:#fff;
+  border-radius:10px;
+  padding:20px;
+  width: 320px;
+}
+.panel h2 {margin-top:0;}
+.panel input[type="text"], .panel input[type="file"], .panel textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+.panel button {margin-top:10px; width:100%; background:#0073e6; color:#fff; border:none; padding:8px; border-radius:6px;}
+.panel button:hover {background:#005bb5;}
+.progress {width:100%; height:6px; background: #eee; border-radius:4px; overflow:hidden; margin-top:6px;}
+.progress i {display:block; height:100%; width:0; background: linear-gradient(90deg,#0073e6,#00a3ff);}
+
+/* ===================== DETAIL SLIDE ===================== */
+.detail-overlay {position: fixed; inset:0; display:none; z-index: 3000; background: rgba(0,0,0,0.3);}
+.detail-sheet {
+  position: absolute; right:0; top:0;
+  width: 90%; max-width: 900px;
+  height:100%;
+  background:#fff;
+  display:flex;
+  transform: translateX(100%);
+  transition: transform 0.45s ease;
+  border-radius: 8px 0 0 8px;
+}
+.detail-sheet.show {transform:translateX(0);}
+.detail-left{flex:1;display:flex;align-items:center;justify-content:center;background:#111;}
+.detail-left img{max-width:100%; max-height:100%; object-fit:contain;}
+.detail-right{width:350px; padding:20px; display:flex;flex-direction:column;}
+.detail-right h3{margin:0 0 10px;}
+.detail-right textarea{flex:1; resize:none; padding:8px; border:1px solid #ccc; border-radius:6px;}
+.detail-right .btn-small{margin-top:8px; padding:6px; font-size:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Wiedlak Gallery</h1>
+  <button id="uploadBtn" class="btn">Upload</button>
+</header>
+
+<main>
+  <div id="gallery"></div>
+</main>
+
+<!-- Upload modal -->
+<div id="uploadOverlay" class="overlay">
+  <div class="panel">
+    <h2>Upload Image</h2>
+    <input id="codeInput" type="text" placeholder="Enter 5-digit code" maxlength="5">
+    <input id="fileInput" type="file" accept="image/*">
+    <textarea id="descInput" rows="3" placeholder="Optional description"></textarea>
+    <button id="submitUpload">Submit</button>
+    <button id="cancelUpload" style="background:#ccc;color:#111;margin-top:6px;">Cancel</button>
+    <div class="progress"><i></i></div>
+    <div id="uploadMsg" style="font-size:12px;margin-top:4px;color:#555;"></div>
+  </div>
+</div>
+
+<!-- Detail overlay -->
+<div id="detailOverlay" class="detail-overlay">
+  <div class="detail-sheet">
+    <div class="detail-left"><img id="detailImg" src="" alt="Image preview"></div>
+    <div class="detail-right">
+      <h3 id="detailTitle">Title</h3>
+      <textarea id="detailDesc"></textarea>
+      <button id="saveDesc" class="btn-small">Save description</button>
+      <button id="closeDetail" class="btn-small" style="background:#ccc;color:#111;">Close</button>
+      <a id="downloadLink" href="#" download style="margin-top:6px;">Download Image</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* CONFIG */
+const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY"; // replace with your key
+const ALLOWED_CODES = ["12345","22222"];
+const STORAGE_KEY = "wiedlak_images";
+
+/* DOM */
+const uploadBtn = document.getElementById('uploadBtn');
+const uploadOverlay = document.getElementById('uploadOverlay');
+const cancelUpload = document.getElementById('cancelUpload');
+const submitUpload = document.getElementById('submitUpload');
+const codeInput = document.getElementById('codeInput');
+const fileInput = document.getElementById('fileInput');
+const descInput = document.getElementById('descInput');
+const uploadMsg = document.getElementById('uploadMsg');
+const gallery = document.getElementById('gallery');
+const progressBar = document.querySelector('.progress i');
+
+const detailOverlay = document.getElementById('detailOverlay');
+const detailSheet = document.querySelector('.detail-sheet');
+const detailImg = document.getElementById('detailImg');
+const detailTitle = document.getElementById('detailTitle');
+const detailDesc = document.getElementById('detailDesc');
+const saveDesc = document.getElementById('saveDesc');
+const closeDetail = document.getElementById('closeDetail');
+const downloadLink = document.getElementById('downloadLink');
+
+/* STATE */
+let images = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+let currentIdx = null;
+
+/* FUNCTIONS */
+function persist(){localStorage.setItem(STORAGE_KEY, JSON.stringify(images));}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
+function renderGallery(){
+  gallery.innerHTML='';
+  images.forEach((it,idx)=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`<img src="${it.url}" data-idx="${idx}"><div class="meta"><span class="title">${escapeHtml(it.title||'Untitled')}</span><button class="download-btn" data-idx="${idx}">⬇</button></div>`;
+    gallery.appendChild(card);
+    setTimeout(()=>card.classList.add('visible'),50+idx*40);
+  });
+  gallery.querySelectorAll('img[data-idx]').forEach(img=>{
+    img.onclick=e=>openDetail(Number(img.dataset.idx));
+  });
+  gallery.querySelectorAll('button.download-btn').forEach(btn=>{
+    btn.onclick=e=>{
+      const idx=Number(btn.dataset.idx);
+      const link=document.createElement('a');
+      link.href=images[idx].url;
+      link.download=images[idx].title||'image';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    };
+  });
+}
+
+function show(el){el.style.display='flex';}
+function hide(el){el.style.display='none';}
+
+/* UPLOAD */
+uploadBtn.onclick=()=>{codeInput.value='';fileInput.value='';descInput.value='';uploadMsg.textContent='';progressBar.style.width='0%';show(uploadOverlay);}
+cancelUpload.onclick=()=>hide(uploadOverlay);
+
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej('File read error');r.readAsDataURL(file);});}
+
+async function doUpload(file,name,desc){
+  const base64 = await fileToBase64(file);
+  const form = new FormData();
+  form.append('key',IMGBB_API_KEY);
+  form.append('image',base64);
+  form.append('name',name);
+
+  return new Promise((resolve,reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST','https://api.imgbb.com/1/upload');
+    xhr.upload.onprogress = e => {if(e.lengthComputable){progressBar.style.width=Math.round((e.loaded/e.total)*100)+'%';}};
+    xhr.onload=()=>{try{const resp=JSON.parse(xhr.responseText);if(resp.success)resolve(resp.data);else reject(resp.error.message||'Upload error');}catch(err){reject(err);}};
+    xhr.onerror=()=>reject('Network error');
+    xhr.send(form);
+  });
+}
+
+submitUpload.onclick=async()=>{
+  const code=codeInput.value.trim();
+  const file=fileInput.files[0];
+  const desc=descInput.value||'';
+  if(!ALLOWED_CODES.includes(code)){uploadMsg.textContent='Incorrect code';return;}
+  if(!file){uploadMsg.textContent='Select an image';return;}
+  uploadMsg.textContent='Uploading...';
+  try{
+    const data=await doUpload(file,file.name.replace(/\s+/g,'_'),desc);
+    const item={id:Date.now()+'_'+Math.floor(Math.random()*10000),url:data.display_url,title:file.name,desc:desc};
+    images.unshift(item);
+    persist();
+    renderGallery();
+    uploadMsg.textContent='Uploaded!';
+    setTimeout(()=>hide(uploadOverlay),800);
+  }catch(e){uploadMsg.textContent='Error: '+e;}
+};
+
+/* DETAIL */
+function openDetail(idx){
+  currentIdx=idx;
+  const it=images[idx];
+  detailImg.src=it.url;
+  detailTitle.textContent=it.title||'Image';
+  detailDesc.value=it.desc||'';
+  downloadLink.href=it.url;
+  downloadLink.download=it.title||'image';
+  show(detailOverlay);
+  setTimeout(()=>detailSheet.classList.add('show'),20);
+}
+closeDetail.onclick=()=>{detailSheet.classList.remove('show');setTimeout(()=>hide(detailOverlay),450);}
+saveDesc.onclick=()=>{if(currentIdx===null)return;images[currentIdx].desc=detailDesc.value;persist();renderGallery();saveDesc.textContent='Saved ✓';setTimeout(()=>saveDesc.textContent='Save description',1200);}
+
+/* INIT */
+renderGallery();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){hide(uploadOverlay);detailSheet.classList.remove('show');setTimeout(()=>hide(detailOverlay),450);}});
+</script>
+
+</body>
+</html>  h1{font-size:16px;margin:0;}
   .actions{display:flex;align-items:center;gap:10px}
 
   /* Upload button */
